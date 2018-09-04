@@ -1,0 +1,36 @@
+body.geolocation-settings-has-editable-settings #wp-admin-bar-geolocation_market {
+	display: block;
+}
+
+#wp-admin-bar-geolocation_market {
+	display: none;
+}
+
+.geolocation-settings-overwritable:after {
+	margin-left: 10px;
+	float: right;
+	cursor: help;
+	font-family: dashicons;
+	content: "\f319";
+}
+
+#geolocation-settings-modal table {
+	border-collapse: collapse;
+}
+
+#geolocation-settings-modal table td {
+	border: 1px solid #ccc;
+}
+
+#geolocation-settings-modal table tr td:first-child {
+	font-weight: bold;
+}
+
+#geolocation-settings-modal table tr td:nth-of-type(2) {
+	font-family: monospace;
+	white-space: pre;
+}
+
+#geolocation-settings-modal table tr td:last-child {
+	text-align: center;
+}

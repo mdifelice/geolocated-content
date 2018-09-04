@@ -1,0 +1,72 @@
+#geolocation.php
+msgid "Markets"
+msgstr "Mercados"
+
+msgid "Market"
+msgstr "Mercado"
+
+msgid "Search Markets"
+msgstr "Buscar Mercados"
+
+msgid "All Markets"
+msgstr "Todos los Mercados"
+
+msgid "Parent Market"
+msgstr "Mercado Padre"
+
+msgid "Parent Market:"
+msgstr "Mercado Padre:"
+
+msgid "Edit Market"
+msgstr "Editar Mercado"
+
+msgid "Update Market"
+msgstr "Actualizar Mercado"
+
+msgid "Add New Market"
+msgstr "Agregar Nuevo Mercado"
+
+msgid "New Market Name"
+msgstr "Nuevo Nombre de Mercado"
+
+msgid "market"
+msgstr "mercado"
+
+msgid "Geolocation"
+msgstr "Geolocalización"
+
+msgid "Geolocation Settings"
+msgstr "Configuración de Geolocalización"
+
+msgid "Global Market"
+msgstr "Mercado Global"
+
+msgid "Restrict user for the following markets"
+msgstr "Restringir usuario para los siguientes mercados"
+
+msgid "Select none for full permissions."
+msgstr "No seleccionar ninguno para permisos completos."
+
+msgid "One of the markets you chose is not available for you."
+msgstr "Uno de los mercados elegidos no está disponible para tí."
+
+msgid "You must select at least one of the available markets."
+msgstr "Debes elegir al menos uno de los mercados disponibles."
+
+msgid "Provider"
+msgstr "Proveedor"
+
+#class_geolocation_walker.php
+msgid "All markets"
+msgstr "Todos los mercados"
+
+#shortcodes.php
+msgid "Where are you?"
+msgstr "¿Dónde te encuentras?"
+
+#widgets.php
+msgid "Change Location"
+msgstr "Cambiar Ubicación"
+
+msgid "Close"
+msgstr "Cerrar"
