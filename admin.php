@@ -243,3 +243,57 @@ add_action( 'save_post', function( $post_id, $post ) {
 		wp_set_post_terms( $post_id, $locations, 'location' );
 	}
 } );
+
+add_action( 'restrict_manage_posts', function() {
+	global $typenow, $wp_query;
+
+	if ( in_array( 'location', get_object_taxonomies( $typenow ), true ) ) {
+		$location_id = null;
+
+		if ( isset( $_GET['geolocation_location_id'] ) ) {
+			$location_id = absint( $_GET['geolocation_location_id'] );
+		}
+
+		wp_dropdown_categories( array(
+			'taxonomy' => 'location',
+			'name'     => 'geolocation_location_id',
+			'orderby'  => 'name',
+			'selected' => $location_id,
+			'walker'   => new Geolocation_Walker_CategoryDropdown(),
+			)
+		);
+	}
+} );
+
+add_action( 'manage_users_custom_column', function( $value, $column_name, $user_id ) {
+    if ( 'allowed_locations' === $column_name ) {
+		$allowed_locations = geolocation_get_user_allowed_locations( $user_id );
+
+		$value = '';
+
+		if ( empty( $allowed_locations ) ) {
+			$value = __( 'All locations', 'geolocation' );
+		} else {
+			foreach ( $allowed_locations as $location_id ) {
+				$location = geolocation_get_location( $location_id );
+
+				if ( $location ) {
+					$value .= ( empty( $value ) ? '' : '<br/>' ) . esc_html( $location->name );
+				}
+			}
+		}
+	}
+
+	return $value;
+} );
+
+add_action( 'created_market', 'geolocation_clean_locations_cache' );
+add_action( 'edited_market', 'geolocation_clean_locations_cache' );
+add_action( 'deleted_market', 'geolocation_clean_locations_cache' );
+add_action( 'update_option_geolocation_default_location_id', 'geolocation_clean_locations_cache' );
+
+add_filter( 'manage_users_columns', function( $columns ) {
+    $columns['allowed_locations'] = __( 'Allowed locations', 'geolocation' );
+
+    return $columns;
+} );
