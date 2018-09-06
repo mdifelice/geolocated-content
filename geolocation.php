@@ -3,7 +3,7 @@
  * Plugin Name: Geolocation
  * Description: Allows to deliver different content to users in different locations.
  * Plugin URI:  https://github.com/mdifelice/geolocation
- * Author:      Martín Di Felice
+ * Author:      Martin Di Felice
  * Author URI:  https://github.com/mdifelice
  * Text Domain: geolocated-content
  * Domain Path: /languages
@@ -24,24 +24,24 @@
  * @package Geolocation
  */
 
-include_once __DIR__ . '/classes/class-geolocation-location-link-widget.php';
-include_once __DIR__ . '/classes/class-geolocation-location-list-widget.php';
-include_once __DIR__ . '/classes/class-geolocation-redirect.php';
-include_once __DIR__ . '/functions.php';
-include_once __DIR__ . '/jetpack.php';
-include_once __DIR__ . '/redirection.php';
-include_once __DIR__ . '/settings.php';
-include_once __DIR__ . '/shortcodes.php';
-include_once __DIR__ . '/templates.php';
-include_once __DIR__ . '/user-restriction.php';
-include_once __DIR__ . '/widgets.php';
+require_once __DIR__ . '/classes/class-geolocation-location-link-widget.php';
+require_once __DIR__ . '/classes/class-geolocation-location-list-widget.php';
+require_once __DIR__ . '/classes/class-geolocation-redirect.php';
+require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/jetpack.php';
+require_once __DIR__ . '/redirection.php';
+require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/shortcodes.php';
+require_once __DIR__ . '/templates.php';
+require_once __DIR__ . '/user-restriction.php';
+require_once __DIR__ . '/widgets.php';
 
 add_action(	'admin_menu', function() {
 	add_options_page(
 		__( 'Geolocation', 'geolocation' ),
 		__( 'Geolocation', 'geolocation' ),
 		'manage_options',
-		'geolocation_settings',
+		'geolocation',
 		function() {
 			?>
 <div class="wrap">
@@ -252,7 +252,7 @@ add_action( 'init', function() {
 	$post_types = get_post_types(
 		array(
 			'_builtin' => false,
-		),
+		)
 	);
 
 	$post_types[] = 'post';
@@ -410,10 +410,10 @@ add_filter( 'redirect_canonical', function( $redirect_url ) {
 
 add_filter( 'home_url',	'geolocation_add_location_to_url' );
 
-add_filter( 'plugin_action_links' . plugin_basename( __FILE__ ), function( $links ) {
+add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), function( $links ) {
 	$links[] = sprintf(
 		'<a href="%s">%s</a>',
-		esc_attr( admin_url( 'admin.php?page=geolocation' ) ),
+		esc_attr( admin_url( 'options-general.php?page=geolocation' ) ),
 		esc_html__( 'Settings', 'geolocation' )
 	);
 

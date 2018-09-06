@@ -24,12 +24,12 @@ function geolocation_redirection_location_form_fields( $term = null ) {
 			sprintf(
 				'<label for="geolocation_redirection_%s">%s</label>',
 				esc_attr( $key ),
-				esc_html( $label ),
+				esc_html( $label )
 			),
 			sprintf(
-				'<input id="geolocation_redirection_%s" name="geolocation_redirection_%s" value="%s" type="number" />'
+				'<input id="geolocation_redirection_%s" name="geolocation_redirection_%s" value="%s" type="number" />',
 				esc_attr( $key ),
-				esc_attr( $key ),
+				esc_attr( $key )
 			)
 		);
 	}

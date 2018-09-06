@@ -18,7 +18,7 @@ class Geolocation_Location_Link_Widget extends WP_Widget {
 
 		geolocation_print_location_link(
 			array(
-				'text' => ! empty( $instance['text'] ) ? $instance['text'] ) : '',
+				'text' => ! empty( $instance['text'] ) ? $instance['text'] : '',
 				'home' => ! empty( $instance['home'] ),
 			)
 		);

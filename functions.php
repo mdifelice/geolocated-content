@@ -30,7 +30,7 @@ function geolocation_get_current_user_allowed_location_ids() {
 	$current_user_id      = get_current_user_id();
 
 	if ( $current_user_id ) {
-		$allowed_location_ids = geolocation_user_allowed_location_ids( $current_user_id );
+		$allowed_location_ids = geolocation_get_user_allowed_location_ids( $current_user_id );
 	}
 
 	return $allowed_location_ids;

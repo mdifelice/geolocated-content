@@ -50,7 +50,7 @@ function geolocation_print_term_link( $args ) {
 		$output = sprintf(
 			'<a href="%s">%s</a>',
 			esc_url( $link ),
-			$text,
+			$text
 		);
 	}
 

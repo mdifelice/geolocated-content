@@ -18,7 +18,7 @@ class Geolocation_Redirect extends WP_Widget {
 
 		geolocation_print_redirection(
 			array(
-				'url'         => ! empty( $instance['url'] ) ? $instance['url'] ) : '',
+				'url'         => ! empty( $instance['url'] ) ? $instance['url'] : '',
 				'location_id' => ! empty( $instance['location_id'] ) ? $instance['location_id'] : '',
 			)
 		);
@@ -26,11 +26,11 @@ class Geolocation_Redirect extends WP_Widget {
 		echo $args['after_widget'];
 	}
 
-	public function update( $instance ) {
-		$instance['url']         = esc_url( $instance['url'] );
-		$instance['location_id'] = absint( $instance['location_id'] );
+	public function update( $new_instance, $old_instance ) {
+		$new_instance['url']         = esc_url( $new_instance['url'] );
+		$new_instance['location_id'] = absint( $new_instance['location_id'] );
 
-		return $instance;
+		return $new_instance;
 	}
 
 	public function form( $instance ) {
