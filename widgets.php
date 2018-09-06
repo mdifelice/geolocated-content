@@ -6,196 +6,94 @@
  */
 
 /**
- * Widget that prints a list of markets.
- *
- * @todo Integrate JS functionality to open/close menu currently placed in
- * the Hamburger Menu plugin.
+ * Registers widgets.
  */
-class Geolocation_Markets_Widget extends WP_Widget {
-	function __construct() {
-		parent::__construct( false, __( 'Market List', 'geolocation' ) );
-	}
+add_action( 'widgets_init', function() {
+	register_widget( 'Geolocation_Location_List_Widget' );
 
-	function widget( $args, $instance ) {
-		$markets = geolocation_get_markets();
-
-		if ( ! empty( $markets ) ) {
-			echo wp_kses_post( $args['before_widget'] );
-
-			if ( ! empty( $instance['title'] ) ) {
-				echo wp_kses_post( $args['before_title'] . apply_filters( 'widget_title', $instance['title'] ). $args['after_title'] );
-			}
-			?>
-<div id="markets-manager" class="markets-frame">
-			<?php
-
-			if ( $instance['allow_closing'] ) {
-				?>
-	<a id="advisor-open" class="adv-location">
-		<?php esc_html_e( 'Change Location', 'geolocation' ); ?>
-	</a>
-	<a id="advisor-close" class="adv-close">
-		<?php esc_html_e( 'Close', 'geolocation' ); ?>
-	</a>
-				<?php
-			}
-
-			?>
-	<div class="markets-container">
-			<?php
-
-			$columns 			= $instance['columns'];
-			$count_markets		= count( $markets );
-			$items_per_column	= ceil( $count_markets / $columns );
-
-			for ( $i = 0; $i < $count_markets; $i++ ) {
-				$market = $markets[ $i ];
-
-				if ( 0 === $i % $items_per_column ) {
-					$last_column = $i + $items_per_column >= $count_markets;
-					?>
-		<ul class="markets-list<?php echo $last_column ? ' last' : ''; ?>">					
-					<?php
-				}
-
-				$class = '';
-
-				/**
-				 * Patch for backwards compatibility.
-				 */
-				if ( $i > 5 ) {
-					$class = $i + 1;
-				}
-
-				// VIP: hotfix fatals.
-				$term_link = get_term_link( $market->term_id );
-				if ( true === is_wp_error( $term_link ) ) {
-					$term_link = '';	
-				}
-
-				?>
-			<li<?php echo $class ? ' class="' . esc_attr( $class ) . '"' : ''; ?>>
-				<a class="location-setter" title="<?php echo esc_attr( $market->name ); ?>" href="<?php echo esc_attr( $term_link ); ?>"><?php echo esc_html( $market->name ); ?></a>
-			</li>
-				<?php
-
-				if ( $items_per_column - 1 == $i % $items_per_column ||
-					 $i === $count_markets - 1 ) {
-					?>
-		</ul>
-					<?php
-				}
-			}
-
-			?>
-	</div>
-			<?php
-
-			if ( $instance['allow_closing'] ) {
-				?>
-	<div class="mobile-markets-layer-close"><?php esc_html_e( 'Close', 'geolocation' ); ?></div>				
-				<?php
-			}
-
-			?>
-</div>
-			<?php
-
-			echo wp_kses_post( $args['after_widget'] );
-		}
-	}
-
-	function update( $new_instance, $old_instance ) {
-		$new_instance['title'] 			= isset( $new_instance['title'] ) ? sanitize_text_field( $new_instance['title'] ) : '';
-		$new_instance['allow_closing'] 	= ! empty( $new_instance['allow_closing'] );
-		$new_instance['columns'] 		= ! empty( $new_instance['columns'] ) ? absint( $new_instance['columns'] ) : 1;
-
-		return $new_instance;
-	}
-
-	function form( $instance ) {
-		$instance = wp_parse_args( $instance,
-			array(
-				'title' 		=> '',
-				'columns' 		=> 5,
-				'allow_closing'	=> false,
-			)
-		);
-?>
-<p>
-	<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title:', 'geolocation' ); ?></label>
-	<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" type="text" value="<?php echo esc_attr( $instance['title'] ); ?>" />
-</p>
-<p>
-	<label for="<?php echo esc_attr( $this->get_field_id( 'allow_closing' ) ); ?>"><?php esc_html_e( 'Allow Closing?:', 'geolocation' ); ?></label>
-	<input id="<?php echo esc_attr( $this->get_field_id( 'allow_closing' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'allow_closing' ) ); ?>" type="checkbox"<?php checked( $instance['allow_closing'] ); ?> />
-</p>
-<p>
-	<label for="<?php echo esc_attr( $this->get_field_id( 'columns' ) ); ?>"><?php esc_html_e( 'Columns:', 'geolocation' ); ?></label>
-	<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'columns' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'columns' ) ); ?>" type="number" value="<?php echo esc_attr( $instance['columns'] ); ?>" min="1" max="10" />
-</p>
-<?php
-	}
-}
+	register_widget( 'Geolocation_Location_Link_Widget' );
+} );
 
 /**
- * Prints a link to the current market archive. 
+ * Allows to select in which locations to show a widget.
  */
-class Geolocation_Market_Link extends WP_Widget {
-	function __construct() {
-		parent::__construct( false, __( 'Market Link', 'geolocation' ) );
+add_action( 'in_widget_form', function( $widget, $return, $instance ) {
+	$locations = geolocation_get_locations();
+
+	if( isset( $instance['geolocation_location_ids'] ) ) {
+		$instance_location_ids = $instance['geolocation_location_ids'];
+	} else {
+		$instance_location_ids = null;
 	}
 
-	function widget( $args, $instance ) {
-		$market_id = geolocation_get_current_market_id();
-
-		if ( ! $market_id ) {
-			$global_market = geolocation_get_global_market();
-
-			if ( $global_market ) {
-				$market_id = $global_market->term_id;
-			}
-		}
-
-		if ( $market_id ) {
-			remove_filter( 'term_link', 'geolocation_term_link_filter', 10, 3 );
-
-			$link = wpcom_vip_get_term_link( $market_id, 'market' );
-
-			add_filter( 'term_link', 'geolocation_term_link_filter', 10, 3 );
-		}
-
-		if ( $link ) {
-			echo wp_kses_post( $args['before_widget'] );
-
-			echo '<a href="' . esc_url( $link ) . '">';
-
-			if ( ! empty( $instance['title'] ) ) {
-				echo wp_kses_post( $args['before_title'] . apply_filters( 'widget_title', $instance['title'] ). $args['after_title'] );
-			}
-
-			echo '</a>';
-
-			echo wp_kses_post( $args['after_widget'] );
-		}
+	if ( ! empty( $instance_location_ids ) ) {
+		$instance_location_ids_map = array_flip( $instance_location_ids );
 	}
-
-	function form( $instance ) {
-		$instance = wp_parse_args( $instance,
-			array(
-				'title' 		=> '',
-			)
-		);
-?>
+	?>
 <p>
-	<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title:', 'geolocation' ); ?></label>
-	<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" type="text" value="<?php echo esc_attr( $instance['title'] ); ?>" />
+	<label><?php esc_html_e( 'Show in location?:', 'geolocation' ); ?></label>
+	<?php geolocation_dropdown( $instance_location_ids, true ); ?>
 </p>
-<?php
-	}
-}
+	<?php
+}, 10, 3 );
 
-add_action( 'widgets_init', function() {
-	register_widget( 'Geolocation_Markets_Widget' );
-	register_widget( 'Geolocation_Market_Link' );
+/**
+ * When a widget is updated we save the locations where we want to display it.
+ */
+add_filter( 'widget_update_callback', function( $instance ) {
+	$location_ids = array();
+
+	if ( isset( $_POST['geolocation_location_ids'] ) ) {
+		$possible_location_ids = $_POST['geolocation_location_ids'];
+
+		if ( is_array( $possible_location_ids ) ) {
+			foreach ( $possible_location_ids as $possible_location_id ) {
+				$location_id = absint( $possible_location_id );
+
+				if ( $location_id ) {
+					$location_ids[] = $location_id;
+				}
+			}	
+		}
+	}
+
+	if ( ! empty( $location_ids ) ) {
+		$instance['geolocation_location_ids'] = $location_ids;
+	} else {
+		if ( isset( $instance['geolocation_location_ids'] ) ) {
+			unset( $instance['geolocation_location_ids'] );
+		}
+	}
+
+	return $instance;
+} );
+
+/**
+ * Determines if the widget must be displayed or not.
+ */
+add_filter( 'widget_display_callback', function( $instance ) {
+	if ( ! empty( $instance['geolocation_location_ids'] ) ) {
+		$location_ids = $instance['geolocation_location_ids'];
+	} else {
+		$location_ids = null;
+	}
+
+	if ( ! empty( $location_ids ) ) {
+		$visitor_location_id = geolocation_get_visitor_location_id();
+		$is_allowed          = false;
+
+		foreach ( $location_ids as $location_id ) {
+			if ( $location_id === $visitor_location_id ) {
+				$is_allowed = true;
+
+				break;
+			}
+		}
+
+		if ( ! $is_allowed ) {
+			$instance = false;
+		}
+	}
+
+	return $instance;
 } );

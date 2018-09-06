@@ -1,138 +1,152 @@
 <?php
 /**
+ * Settings extension.
+ *
+ * @package Geolocation
+ */
+
+/**
  * Function to be hooked to the pre_option_$option_name filter.
  *
- * @param mixed  $value  Original option value.
- * @param string $option Name of option.
+ * @param mixed  $value Original option value.
+ * @param string $name  Name of option.
  *
  * @return mixed The value of the option.
  */
-function geolocation_settings_pre_option( $value, $option ) {
-	$market_id = geolocation_get_current_market_id();
+function geolocation_settings_pre_option( $value, $name ) {
+	$location_id = geolocation_get_current_location_id();
 
-	if ( $market_id ) {
-		$value = apply_filters( 'geolocation_settings_pre_option_' . $option, geolocation_settings_get_option( $option, $market_id ), $market_id, $option );
+	if ( $location_id ) {
+		$value = apply_filters( 'geolocation_settings_pre_option_' . $name, geolocation_settings_get_option( $name, $location_id ), $location_id, $name );
 	}
 
 	return $value;
 }
 
 /**
- * Returns the option value for an specific market.
+ * Returns the meta key used to store an option for a specific location. 
  *
- * @param string $option The option name.
- * @param int	 $market_id The market ID.
+ * @param string $option_name The name of the option.
+ *
+ * @return string The meta key for that option.
+ */ 
+function geolocation_settings_get_option_meta_key( $option_name ) {
+	return 'geolocation_' . $option_name;
+}
+
+/**
+ * Returns the option value for an specific location.
+ *
+ * @param string $option_name The option name.
+ * @param int	 $location_id The location ID.
  *
  * @return mixed The option value. FALSE if it is not found.
  */
-function geolocation_settings_get_option( $option, $market_id ) {
-	$meta_key = 'market_' . $option;
+function geolocation_settings_get_option( $option_name, $location_id ) {
+	$meta_key = geolocation_settings_get_option_meta_key( $option_name );
 
-	if ( metadata_exists( 'term', $market_id, $meta_key ) ) {
-		$value = get_term_meta( $market_id, $meta_key, true );
-	} else {
-		remove_filter( 'pre_option_' . $option, 'geolocation_settings_pre_option', 10, 3 );
-
-		$value = get_option( 'market_' . $option . '_' . $market_id );
-
-		if ( false === $value ) {
-			$value = get_option( 'market_' . $market_id . '_' . $option );
-
-			if ( false === $value ) {
-				$value = get_option( $option . '_' . $market_id );
-			}
-		}
-
-		add_filter( 'pre_option_' . $option, 'geolocation_settings_pre_option', 10, 3 );
+	if ( metadata_exists( 'term', $location_id, $meta_key ) ) {
+		$value = get_term_meta( $location_id, $meta_key, true );
 	}
 
 	return $value;
 }
 
 /**
- * Deletes the option value for an specific market.
+ * Deletes the option value for a specific location.
  *
- * @param string $option The option name.
- * @param int	 $market_id The market ID.
+ * @param string $option_name The option name.
+ * @param int	 $market_id   The market ID.
  *
  * @return boolean TRUE on success, FALSE otherwise.
  */
-function geolocation_settings_delete_option( $option, $market_id ) {
-	$meta_key = 'market_' . $option;
-	$response = false;
+function geolocation_settings_delete_option( $option_name, $location_id ) {
+	$status   = false;
+	$meta_key = geolocation_settings_get_option_meta_key( $option_name );
 
-	if ( metadata_exists( 'term', $market_id, $meta_key ) ) {
-		$response = delete_term_meta( $market_id, $meta_key );
-	} else {
-		remove_filter( 'pre_option_' . $option, 'geolocation_settings_pre_option', 10, 3 );
-
-		$option = 'market_' . $option . '_' . $market_id;
-
-		$value = get_option( $option );
-
-		if ( false === $value ) {
-			$option = 'market_' . $market_id . '_' . $option;
-
-			$value = get_option( $option );
-
-			if ( false === $value ) {
-				$option = $option . '_' . $market_id;
-			}
-		}
-
-		$response = delete_option( $option );
-
-		add_filter( 'pre_option_' . $option, 'geolocation_settings_pre_option', 10, 3 );
+	if ( metadata_exists( 'term', $location_id, $meta_key ) ) {
+		$status = delete_term_meta( $location_id, $meta_key );
 	}
 
-	return $response;
+	return $status;
 }
+
+add_action(	'admin_init', function() {
+	add_settings_field(
+		'geolocation_settings_enabled', 
+		__( 'Enable geolocated settings?', 'geolocation' ),
+		function() {
+			printf(
+				'<input type="checkbox" name="geolocation_settings_enabled" value="yes"%s />',
+				checked( 'yes', get_option( 'geolocation_settings_enabled' ), false )
+			);
+
+			printf(
+				'<p class="description">%s</p>',
+				esc_html__( 'If you enable this, settings from other plugins can be modified to have different values for each location.', 'geolocation' )
+			);
+		},
+		'geolocation',
+		'geolocation_settings'
+	);
+
+	register_setting(
+		'geolocation',
+		'geolocation_settings_enabled',
+		function( $value ) {
+			return 'yes' === $value ? 'yes' : 'no';
+		}
+	);
+} );
 
 /**
  * In order to avoid searching for every option, only saved options through
- * this page will be filtered based on the market. To do that, we use an
- * special option called "geolocation_market_settings" which contains all the
+ * this page will be filtered based on the location. To do that, we use an
+ * special option called 'geolocation_settings_cache' which contains all the
  * options that were overriden.
- *
- * For backward compatibility, in case the market settings were already
- * defined by other plugin, users should go to each page and save values if
- * options are not being showed when navigating the website.
  */
-if ( get_option( 'geolocation_extend_settings' ) ) {
+$geolocation_settings_enabled = get_option( 'geolocation_settings_enabled' );
+
+if ( 'yes' === $geolocation_settings_enabled ) {
 	/**
-	 * We add the market selector to the admin bar.
+	 * Adds the location selector to the admin bar.
 	 */
 	add_action( 'admin_bar_menu', function( $wp_admin_bar ) {
-		if ( is_admin() &&
-			 current_user_can( 'manage_options' ) ) {
-			$current_market_name = geolocation_get_current_market_name();
+		if ( is_admin() && current_user_can( 'manage_options' ) ) {
+			$locations = geolocation_get_locations();
 
-			$markets = geolocation_get_markets();
+			if ( ! empty( $locations ) ) {
+				$current_location_id   = geolocation_get_current_location_id();
+				$default_location_name = __( 'Default', 'geolocation' );
+				$current_location_name = $default_location_name;
 
-			if ( ! empty( $markets ) ) {
+				if ( isset( $locations[ $current_location_id ] ) ) {
+					$current_location_name = $locations[ $current_location ]->name;
+				}
+
 				$node = array(
-					'id'		=> 'geolocation_market',
-					'parent'	=> false,
-					'title'		=> sprintf( __( 'Current Market: %s', 'geolocation' ), $current_market_name ),
+					'id'     => 'geolocation_location',
+					'parent' => false,
+					'title'  => sprintf( __( 'Current location: %s', 'geolocation' ), $current_location_name ),
 				);
 
 				$wp_admin_bar->add_node( $node );
 
 				$node = array(
-					'href'		=> remove_query_arg( 'geolocation_market' ),
-					'id'		=> 'geolocation_market_default',
-					'parent'	=> 'geolocation_market',
-					'title'		=> __( 'Default', 'geolocation' ),
+					'href'   => remove_query_arg( 'geolocation_location_id' ),
+					'id'     => 'geolocation_location_default',
+					'parent' => 'geolocation_location',
+					'title'  => $default_location_name,
 				);
 
 				$wp_admin_bar->add_node( $node );
 
-				foreach ( $markets as $market ) {
+				foreach ( $locations as $location ) {
 					$node = array(
-						'href'		=> add_query_arg( 'geolocation_market', $market->term_id ),
-						'id'		=> 'geolocation_market_' . $market->term_id,
-						'parent'	=> 'geolocation_market',
-						'title'		=> $market->name,
+						'href'   => add_query_arg( 'geolocation_location_id', $location->term_id ),
+						'id'     => 'geolocation_location_' . $location->term_id,
+						'parent' => 'geolocation_location',
+						'title'  => $location->name,
 					);
 
 					$wp_admin_bar->add_node( $node );
@@ -144,25 +158,25 @@ if ( get_option( 'geolocation_extend_settings' ) ) {
 	add_action( 'admin_init', function() {
 		global $wp_registered_settings;
 
-		$geolocation_market_settings = array();
+		$geolocation_settings_cache = array();
 
-		$market_id = geolocation_get_current_market_id( 'administrator' );
+		$location_id = geolocation_get_current_user_location_id();
 
 		foreach ( $wp_registered_settings as $option_name => $args ) {
-			if ( false === strpos( $option_name, 'geolocation_' ) ) {
-				$geolocation_market_settings[ $option_name ] = true;
+			if ( 0 !== strpos( $option_name, 'geolocation_' ) ) {
+				$geolocation_settings_cache[ $option_name ] = true;
 
 				/**
 				 * We only allow this for 'manage_options'-capable users and if
 				 * they are working over a valid market rather than the default
 				 * one.
 				 */
-				if ( $market_id && current_user_can( 'manage_options' ) ) {
-					add_filter( 'pre_update_option_' . $option_name, function( $value, $old_value, $option ) use ( $market_id ) {
-						$current_value = geolocation_settings_get_option( $option, $market_id );
+				if ( $location_id && current_user_can( 'manage_options' ) ) {
+					add_filter( 'pre_update_option_' . $option_name, function( $value, $old_value, $option ) use ( $location_id ) {
+						$current_value = geolocation_settings_get_option( $option, $location_id );
 
 						if ( $current_value !== $value ) {
-							update_term_meta( $market_id, 'market_' . $option, $value );
+							update_term_meta( $location_id, 'market_' . $option, $value );
 						}
 
 						/**
@@ -180,8 +194,8 @@ if ( get_option( 'geolocation_extend_settings' ) ) {
 		/**
 		 * We only save the geolocation settings if they were modified.
 		 */
-		if ( $geolocation_market_settings !== get_option( 'geolocation_market_settings' ) ) {
-			update_option( 'geolocation_market_settings', $geolocation_market_settings );
+		if ( $geolocation_settings_cache !== get_option( 'geolocation_settings_cache' ) ) {
+			update_option( 'geolocation_settings_cache', $geolocation_settings_cache );
 		}
 	}, 999 );
 
@@ -191,31 +205,41 @@ if ( get_option( 'geolocation_extend_settings' ) ) {
 	 */
 	add_action( 'admin_enqueue_scripts', function() {
 		if ( current_user_can( 'manage_options' ) ) {	
-			wp_enqueue_style( 'geolocation_settings', WP_CONTENT_URL . '/themes/vip/entravision-plugins/geolocation/admin/css/settings.css' );
+			wp_enqueue_style(
+				'geolocation-settings',
+				plugins_url( 'assets/administrator/css/settings.css', __DIR__ )
+			);
 
 			wp_enqueue_style( 'wp-jquery-ui-dialog' );
 
-			wp_enqueue_script( 'geolocation_settings', WP_CONTENT_URL . '/themes/vip/entravision-plugins/geolocation/admin/js/settings.js' );
+			wp_enqueue_script(
+				'geolocation-settings',
+				plugins_url( 'assets/administrator/js/settings.js', __DIR__ )
+			);
 
 			wp_enqueue_script( 'jquery-ui-dialog' );
 
-			wp_localize_script( 'geolocation_settings', 'geolocation_settings', array(
-				'options' => get_option( 'geolocation_market_settings' ),
-				'nonces'  => array(
-					'load'   => wp_create_nonce( 'geolocation_settings_load' ),
-					'delete' => wp_create_nonce( 'geolocation_settings_delete' ),
-				),
-				'i18n'    => array(
-					'delete'         => __( 'Delete', 'geolocation' ),
-					'reload'         => __( 'Reload', 'geolocation' ),
-					'confirm_delete' => __( 'Are you sure to delete this value?', 'geolocation' ),
-					'modal_loading'  => __( 'Loading...', 'geolocation' ),
-					'modal_title'    => __( 'Viewing values for settings "%s"...', 'geolocation' ),
-					'error_delete'   => __( 'Cannot delete setting, maybe it does not exist.', 'geolocation' ),
-					'error_unknown'  => __( 'Unknown error. Please, try again later.', 'geolocation' ),
-					'error_setting'  => __( 'Unknown setting.', 'geolocation' ),
-				),
-			) );
+			wp_localize_script(
+				'geolocation-settings',
+				'geolocation_settings',
+				array(
+					'setting_names' => array_keys( get_option( 'geolocation_settings_cache' ) ),
+					'nonces'        => array(
+						'load'   => wp_create_nonce( 'geolocation_settings_load' ),
+						'delete' => wp_create_nonce( 'geolocation_settings_delete' ),
+					),
+					'i18n'          => array(
+						'delete'         => __( 'Delete', 'geolocation' ),
+						'reload'         => __( 'Reload', 'geolocation' ),
+						'confirm_delete' => __( 'Are you sure to delete this value?', 'geolocation' ),
+						'modal_loading'  => __( 'Loading...', 'geolocation' ),
+						'modal_title'    => __( 'Viewing values for setting "%s"...', 'geolocation' ),
+						'error_delete'   => __( 'Cannot delete setting, maybe it does not exist.', 'geolocation' ),
+						'error_unknown'  => __( 'Unknown error. Please, try again later.', 'geolocation' ),
+						'error_setting'  => __( 'Unknown setting.', 'geolocation' ),
+					),
+				)
+			);
 		}
 	} );
 
@@ -235,25 +259,25 @@ if ( get_option( 'geolocation_extend_settings' ) ) {
 		if ( current_user_can( 'manage_options' ) ) {
 			check_ajax_referer( 'geolocation_settings_delete' );
 
-			if ( isset( $_POST['geolocation_settings_setting'] ) ) {
-				$setting = sanitize_text_field( wp_unslash( $_POST['geolocation_settings_setting'] ) );
+			if ( isset( $_POST['geolocation_settings_setting_name'] ) ) {
+				$setting = sanitize_text_field( wp_unslash( $_POST['geolocation_settings_setting_name'] ) );
 			} else {
 				$setting = null;
 			}
 
-			if ( isset( $_POST['geolocation_settings_market_id'] ) ) {
-				$market_id = absint( wp_unslash( $_POST['geolocation_settings_market_id'] ) );
+			if ( isset( $_POST['geolocation_settings_location_id'] ) ) {
+				$location_id = absint( wp_unslash( $_POST['geolocation_settings_location_id'] ) );
 			} else {
-				$market_id = null;
+				$location_id = null;
 			}
 
 			$response = false;
 
-			if ( $setting && null !== $market_id ) {
-				if ( $market_id ) {
-					$response = geolocation_settings_delete_option( $setting, $market_id );
+			if ( $setting && null !== $location_id ) {
+				if ( $location_id ) {
+					$response = geolocation_settings_delete_option( $setting, $location_id );
 				} else {
-					$response = delete_option( $setting );
+					$response = delete_option( $location_id );
 				}
 			}
 
@@ -268,8 +292,8 @@ if ( get_option( 'geolocation_extend_settings' ) ) {
 		if ( current_user_can( 'manage_options' ) ) {
 			check_ajax_referer( 'geolocation_settings_load' );
 
-			if ( isset( $_POST['geolocation_settings_setting'] ) ) {
-				$setting = sanitize_text_field( wp_unslash( $_POST['geolocation_settings_setting'] ) );
+			if ( isset( $_POST['geolocation_settings_setting_name'] ) ) {
+				$setting = sanitize_text_field( wp_unslash( $_POST['geolocation_settings_setting_name'] ) );
 			} else {
 				$setting = null;
 			}
@@ -282,20 +306,20 @@ if ( get_option( 'geolocation_extend_settings' ) ) {
 				remove_filter( 'pre_option_' . $setting, 'geolocation_settings_pre_option', 10, 3 );
 
 				$response[] = array(
-					'id'      => 0,
-					'name'    => __( 'Default', 'geolocation' ),
-					'setting' => var_export( get_option( $setting ), true ),
+					'id'            => 0,
+					'name'          => __( 'Default', 'geolocation' ),
+					'setting_value' => var_export( get_option( $setting ), true ),
 				);
 
 				add_filter( 'pre_option_' . $setting, 'geolocation_settings_pre_option', 10, 3 );
 
-				$markets = geolocation_get_markets();
+				$locations = geolocation_get_locations();
 
-				foreach ( $markets as $market ) {
+				foreach ( $locations as $location ) {
 					$response[] = array(
-						'id'      => $market->term_id,
-						'name'    => $market->name,
-						'setting' => var_export( geolocation_settings_get_option( $setting, $market->term_id ), true ),
+						'id'            => $location->term_id,
+						'name'          => $location->name,
+						'setting_value' => var_export( geolocation_settings_get_option( $setting, $market->term_id ), true ),
 					);
 				}
 			}
@@ -306,13 +330,13 @@ if ( get_option( 'geolocation_extend_settings' ) ) {
 
 	/**
 	 * We add a filter for each option previously registered in
-	 * "geolocation_market_settings".
+	 * "geolocation_settings_cache".
 	 */
-	$geolocation_market_settings = get_option( 'geolocation_market_settings' );
+	$geolocation_settings_cache = get_option( 'geolocation_settings_cache' );
 
-	if ( $geolocation_market_settings ) {
-		foreach ( $geolocation_market_settings as $option => $value ) {
-			add_filter( 'pre_option_' . $option, 'geolocation_settings_pre_option', 10, 3 );
+	if ( $geolocation_settings_cache ) {
+		foreach ( $geolocation_settings_cache as $name => $value ) {
+			add_filter( 'pre_option_' . $name, 'geolocation_settings_pre_option', 10, 3 );
 		}
 	}
 }

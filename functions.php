@@ -26,14 +26,14 @@ function geolocation_get_rewrite_slug() {
  * @return array List of allowed locations IDs.
  */ 
 function geolocation_get_current_user_allowed_location_ids() {
-	$allowed_locations = false;
-	$current_user_id   = get_current_user_id();
+	$allowed_location_ids = null;
+	$current_user_id      = get_current_user_id();
 
 	if ( $current_user_id ) {
-		$allowed_locations = geolocation_user_allowed_location_ids( $current_user_id );
+		$allowed_location_ids = geolocation_user_allowed_location_ids( $current_user_id );
 	}
 
-	return $allowed_locations;
+	return $allowed_location_ids;
 }
 
 /**
@@ -43,8 +43,8 @@ function geolocation_get_current_user_allowed_location_ids() {
  *
  * @return array List of allowed locations IDs.
  */ 
-function geolocation_get_user_allowed_locations( $user_id ) {
-	return get_user_meta( $user_id, 'geolocation_allowed_locations', true );
+function geolocation_get_user_allowed_location_ids( $user_id ) {
+	return get_user_meta( $user_id, 'geolocation_allowed_location_ids', true );
 }
 
 /**
@@ -84,10 +84,10 @@ function geolocation_is_admin() {
  * Returns the list of locations.
  *
  * @param boolean $include_default_location Optional. Whether to include the
- *                                          default location. Default is TRUE.
+ *                                          default location. Default is FALSE.
  * @return array List of locations.
  */
-function geolocation_get_locations( $include_default_location = true ) {
+function geolocation_get_locations( $include_default_location = false ) {
 	$locations = get_option( 'geolocation_locations', array() );
 
 	if ( ! $include_default_location ) {
@@ -115,6 +115,29 @@ function geolocation_get_location( $location_id ) {
 
 	if ( isset( $locations[ $location_id ] ) ) {
 		$location = $locations[ $location_id ];
+	}
+
+	return $location;
+}
+
+/**
+ * Returns a location object.
+ *
+ * @param slug $location_slug The slug of the location.
+ *
+ * @return WP_Term A term object representing the location or NULL if it does
+ *                 not exist a location with such slug.
+ */
+function geolocation_get_location_by_slug( $location_slug ) {
+	$location  = null;
+	$locations = geolocation_get_locations();
+
+	foreach ( $locations as $possible_location ) {
+		if ( $location_slug === $possible_location->slug ) {
+			$location = $possible_location;
+
+			break;
+		}
 	}
 
 	return $location;
@@ -163,6 +186,8 @@ function geolocation_clean_locations_cache() {
 		wp_list_pluck( $terms, 'term_id' ),
 		$terms
 	);
+
+	$new_locations = apply_filters( 'geolocation_new_locations', $new_locations );
 
 	if ( $current_locations !== $new_locations ) {
 		update_option( 'geolocation_locations', $new_locations );
@@ -215,11 +240,16 @@ function geolocation_extract_location_slug( $path ) {
  * Ajax call, since there is not market in the URL, it extracts it from the
  * referer.
  *
+ * @param boolean $include_default_location Optional. If TRUE and the visitor
+ *                                          is not navigating a specific
+ *                                          location, the default one will be
+ *                                          returned. Default is FALSE.
+ *
  * @return string The location slug, NULL if it cannot be found.
  */
-function geolocation_get_visitor_location_slug() {
+function geolocation_get_visitor_location_slug( $include_default_location = false ) {
 	$location_slug = null;
-	$path           = null;
+	$path          = null;
 
 	if ( is_admin() ) {
 		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
@@ -235,6 +265,9 @@ function geolocation_get_visitor_location_slug() {
 
 	if ( $path ) {
 		$location_slug = geolocation_extract_location_slug( $path );
+	}
+
+	if ( empty( $location_slug ) ) {
 	}
 
 	return $location_slug;
@@ -255,8 +288,8 @@ function geolocation_add_location_to_url( $url ) {
 	 * navigating a location which is not the default one.
 	 */
 	if ( ! geolocation_exclude_url( $url ) ) {
-		( $user_location = geolocation_get_user_location() ) ) {
-		$parsed_url = parse_url( $url );
+		$location_slug = geolocation_get_visitor_location_slug();
+		$parsed_url    = wp_parse_url( $url );
 
 		$url = 	( ! empty( $parsed_url['host'] ) ?
 					( ! empty( $parsed_url['scheme'] ) ?
@@ -268,7 +301,7 @@ function geolocation_add_location_to_url( $url ) {
 						: '' ) .
 					( ! empty( $parsed_url['host'] ) ?
 						$parsed_url['host'] : '' ) : '' ) .
-				'/' . $user_location .
+				'/' . $location_slug .
 				( ! empty( $parsed_url['path'] ) ?
 					$parsed_url['path'] : '' ) .
 				( ! empty( $parsed_url['query'] ) ?
@@ -278,20 +311,133 @@ function geolocation_add_location_to_url( $url ) {
 	}
 
 	/**
-	  * For a suggestion made by the WordPress VIP team, we must remove
-	  * the trailing slash from the URL if we are returning 'home_url'.
-	  * For the rest of the hooks, we keep it.
+	  * For a suggestion made by the WordPress VIP team, we must remove the
+	  * trailing slash from the URL if the URL is being filtered by the
+	  * 'home_url' filter.
 	  *
-	  * We also do not want to untrail the slash when the
-	  * template_redirect plugin is being fired because it will throw a
-	  * notice in wp-includes/canonical.php due to the missing "path". But
-	  * we do that only if no market is selected because it could led to
-	  * redirection loop.
+	  * We also do not want to untrail the slash when the template_redirect
+	  * plugin is being fired because it will throw a notice in
+	  * wp-includes/canonical.php due to the missing "path". But we do that only
+	  * if there is not a specific location because it could led to redirection
+	  * loop.
 	  */
-	if ( 'home_url' !== current_filter() || ( ! $user_location && doing_action( 'template_redirect' ) ) )
+	if ( 'home_url' !== current_filter() || ( ! $location_slug && doing_action( 'template_redirect' ) ) ) {
 		$url = trailingslashit( $url );
-	else
+	} else {
 		$url = untrailingslashit( $url );
+	}
 
 	return $url;
+}
+
+/**
+ * Returns the visitor location ID from the current request.
+ *
+ * @param boolean $include_default_location Optional. If TRUE and the visitor
+ *                                          is not navigating a specific
+ *                                          location, the default one will be
+ *                                          returned. Default is FALSE.
+ *
+ * @return int The location ID. Or NULL if there is not a selected market.
+ */
+function geolocation_get_visitor_location_id( $include_default_location = false ) {
+	$location_id   = null;
+	$location_slug = geolocation_get_visitor_location_slug( $include_default_location );
+	$locations     = geolocation_get_locations( $include_default_location );
+
+	foreach ( $locations as $location ) {
+		if ( $location_slug === $location->slug ) {
+			$location_id = $market->term_id;
+
+			break;
+		}
+	}
+
+	return $location_id;
+}
+
+function geolocation_dropdown( $selected_location_id, $multiple = false ) {
+	$args = wp_parse_args(
+		$args,
+		array(
+			'id'       => 'geolocation_location_id',
+			'name'     => 'geolocation_location_id' . ( $multiple ? '[]' : '' ),
+			'selected' => null,
+		)
+	);
+
+	if ( $multiple ) {
+		wp_category_checklist(
+			0,
+			0,
+			$selected_location_id
+		);
+	} else {
+		wp_dropdown_categories( array(
+			'taxonomy' => 'location',
+			'id'       => $args['id'],
+			'name'     => $args['name'],
+			'orderby'  => 'name',
+			'selected' => $args['selected'],
+		) );
+	}
+}
+
+/**
+ * Returns the location the current user is navigating.
+ *
+ * @return int The location ID. 
+ */
+function geolocation_get_current_user_location_id() {
+	$current_location_id = null;
+
+	if ( isset( $_GET['geolocation_location_id'] ) ) {
+		$current_location_id = absint( wp_unslash( $_GET['geolocation_location_id'] ) );
+	} else {
+		if ( isset( $_SERVER['REQUEST_METHOD'] ) ) {
+			$request_method = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) );
+
+			/**
+			 * If this a post request, we will try to check if the referer is
+			 * containing the market.
+			 */
+			if ( 'POST' === $request_method ) {
+				if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
+					$http_referer = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) );
+					$url = wp_parse_url( $http_referer );
+
+					if ( isset( $url['query'] ) ) {
+						wp_parse_str( $url['query'], $query );
+
+						if ( isset( $query['geolocation_location_id'] ) ) {
+							$current_location_id = $query['geolocation_location_id'];
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return $current_location_id;
+}
+
+/**
+ * Returns the current location ID using the one defined for the visitor if it
+ * is a public request or the one defined for the user, in case of an
+ * administration request.
+ *
+ * @return int The location ID. 
+ */
+function geolocation_get_current_location_id() {
+	if ( geolocation_is_admin() ) {
+		$location_id = geolocation_get_visitor_location_id();
+	} else {
+		$location_id = geolocation_get_current_user_location_id();
+	}
+
+	return $location_id;
+}
+
+function geolocation_absfloat( $value ) {
+	return abs( floatval( $value ) );
 }

@@ -1,8 +1,8 @@
-body.geolocation-settings-has-editable-settings #wp-admin-bar-geolocation_market {
+body.geolocation-settings-active #wp-admin-bar-geolocation_location {
 	display: block;
 }
 
-#wp-admin-bar-geolocation_market {
+#wp-admin-bar-geolocation_location {
 	display: none;
 }
 

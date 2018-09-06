@@ -1,129 +1,88 @@
 <?php
-add_shortcode( 'redirect', function( $atts ) {
-	$html 		= '';
-	$atts 		= shortcode_atts( array(
-		'url'		=> '',
-		'market'	=> false
+/**
+ * Shortcode definitions.
+ *
+ * @package Geolocation
+ */
+
+add_shortcode( 'geolocation_redirect', function( $atts ) {
+	$output  = '';
+	$atts    = shortcode_atts( array(
+		'url'      => null,
+		'location' => null,
 		), $atts
 	);
 
-	if ( ! empty( $atts['url'] ) ) {
-		$market_id = geolocation_get_current_market_id();
-
-		if ( $market_id ) {
-			$market = geolocation_get_market( $market_id );
-		} else {
-			$market = null;
-		}
-
-		if ( empty( $atts['market'] ) 	||
-			( ! empty( $market ) 		&&
-			  $market->slug == $atts['market'] ) ) {
-			$html = '<script>window.location.href = ' . wp_json_encode( $atts['url'] ) . ';</script>';
-		}
+	if ( isset( $atts['location'] ) ) {
+		$output = geolocation_print_redirection( array(
+			'url'         => $atts['url'],
+			'location_id' => $location_id,
+			'echo'        => false,
+		) );
 	}
 
-	return $html;
+	return $output;
 } );
 
-add_shortcode( 'geolocation_market_choice', function( $atts ) {
-	$html 		= '';
-	$atts 		= shortcode_atts( array(
-		'list_label'	=> __( 'Where are you?', 'geolocation' )
+add_shortcode( 'geolocation_location_list', function( $atts ) {
+	$atts    = shortcode_atts( array(
+		'home' => 'yes',
 		), $atts
 	);
 
-	global $geolocation_market;
-
-	$list_label = sanitize_text_field( $atts['list_label'] );
-
-	$global_market_id = get_option( 'geolocation_global_market' );
-
-	$actual_geolocation_market = $geolocation_market;
-
-	$markets = get_terms( array(
-		'hide_empty'		=> 0,
-		'taxonomy'			=> 'market'
+	$output = '<div class="geolocation-location-list">';
+	$output = geolocation_print_location_list( array(
+		'home' => 'yes' === $atts['home'],
+		'echo' => false,
 	) );
+	$output .= '</div>';
 
-	if ( $markets ) {
-		$html_escaped	 = '<div class="geolocation-markets-url-list-container"><ul class="geolocation-markets-url-list">';
-		$html_escaped	.= '<li>' . esc_html( $list_label ) . '</li>';
-		$html_aux		 = '';
-
-		foreach ( $markets as $market ) {
-
-			if ( $global_market_id != $market->term_id ){
-				$geolocation_market = $market->slug;
-
-				if ( $actual_geolocation_market == $geolocation_market ) {
-					$html_escaped .= '<li class="current-market"><a href="' . esc_url( get_permalink() ) . '">' . esc_html( $market->name ) . '</a></li>';
-				} else {
-					$html_aux .= '<li><a href="' . esc_url( get_permalink() ) . '">' . esc_html( $market->name ) . '</a></li>';
-				}
-			}
-		}
-		$html_escaped .= $html_aux;
-		$html_escaped .= '</ul></div>';
-	}
-
-	$geolocation_market = $actual_geolocation_market;
-
-	return $html_escaped;
+	return $output;
 } );
 
-add_shortcode( 'geolocation_case_market', function( $atts, $content ) {
-	$atts = shortcode_atts( array(
-		'markets'	=> false,
-	), $atts );
+add_shortcode( 'geolocation_location_link', function( $atts ) {
+	$atts    = shortcode_atts( array(
+		'text' => null,
+		'home' => 'yes',
+		), $atts
+	);
 
-	$html = '';
+	$output = '<div class="geolocation-location-link">';
+	$output = geolocation_print_location_link( array(
+		'text' => $atts['text'],
+		'home' => 'yes' === $atts['home'],
+		'echo' => false,
+	) );
+	$output .= '</div>';
 
-	if ( $atts['markets'] ){
-		$markets = explode( ',', $atts['markets'] );
-
-		foreach ( $markets as $key => $market )
-			$markets[ $key ] = trim( $market );
-
-		if ( $current_market = geolocation_get_user_location() )
-			if ( ( in_array( $current_market, $markets, true ) ) && ( ! empty( $content ) ) )
-				$html .= do_shortcode( $content );
-	} else {
-		if ( ( ! empty( $content ) ) && ( ! geolocation_get_user_location() ) )
-			$html .= do_shortcode( $content );
-	}
-
-	return $html;
+	return $output;
 } );
 
 /**
- * This filter inserts the market parameter in every shortcode.
+ * Allows to exclude each shortcode of any location by using the
+ * 'geolocation_allowed_locations' attribute.
  */
 add_filter( 'pre_do_shortcode_tag', function( $html, $tag, $attr ) {
-	if ( isset( $attr['market'] ) ) {
-		$is_allowed = true;
-		$market_id 	= geolocation_get_current_market_id();
+	if ( isset( $attr['geolocation_allowed_locations'] ) ) {
+		$is_shortcode_allowed = true;
+		$location_slug        = geolocation_get_visitor_location_slug( true );
 
-		if ( $market_id ) {
-			$is_allowed = false;
-			$market 	= geolocation_get_market( $market_id );
+		if ( $location_id ) {
+			$is_shortcode_allowed = false;
+			$allowed_locations    = array_map( function( $value ) {
+				return strtolower( trim( $value ) );
+			}, explode( ',', $atts['geolocationa_allowed_locations'] ) );
 
-			if ( $market ) {
-				$allowed_markets = array_map( function( $value ) {
-					return strtolower( trim( $value ) );
-				}, explode( ',', $attr['market'] ) );
-
-				if ( in_array( $market->slug, $allowed_markets, true ) ) {
-					$is_allowed = true;
-				}
+			if ( in_array( $location_slug, $allowed_location_slugs, true ) ) {
+				$is_shortcode_allowed = true;
 			}
 		} else {
-			$is_allowed = false;
+			$is_shortcode_allowed = false;
 		}
 
-		if ( ! $is_allowed ) {
+		if ( ! $is_shortcode_allowed ) {
 			/**
-			 * Returning an empty string we shortcircuit the shortcode
+			 * Returning an empty string it shortcircuits the shortcode
 			 * processing.
 			 */
 			$html = '';
