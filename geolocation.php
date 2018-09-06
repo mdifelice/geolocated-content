@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Geolocation
- * Description: Allows to deliver different content to users in different locations.
+ * Description: Allows to deliver different content to visitors from different locations.
  * Plugin URI:  https://github.com/mdifelice/geolocation
  * Author:      Martin Di Felice
  * Author URI:  https://github.com/mdifelice
