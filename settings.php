@@ -87,7 +87,7 @@ add_action(	'admin_init', function() {
 			);
 		},
 		'geolocation',
-		'geolocation_settings'
+		'geolocation'
 	);
 
 	register_setting(
@@ -97,7 +97,7 @@ add_action(	'admin_init', function() {
 			return 'yes' === $value ? 'yes' : 'no';
 		}
 	);
-} );
+}, 11 );
 
 /**
  * In order to avoid searching for every option, only saved options through
@@ -207,14 +207,14 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 		if ( current_user_can( 'manage_options' ) ) {	
 			wp_enqueue_style(
 				'geolocation-settings',
-				plugins_url( 'assets/administrator/css/settings.css', __DIR__ )
+				plugins_url( 'assets/administrator/css/settings.css', __FILE__ )
 			);
 
 			wp_enqueue_style( 'wp-jquery-ui-dialog' );
 
 			wp_enqueue_script(
 				'geolocation-settings',
-				plugins_url( 'assets/administrator/js/settings.js', __DIR__ )
+				plugins_url( 'assets/administrator/js/settings.js', __FILE__ )
 			);
 
 			wp_enqueue_script( 'jquery-ui-dialog' );

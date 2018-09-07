@@ -14,7 +14,7 @@ add_shortcode( 'geolocation_redirect', function( $atts ) {
 	);
 
 	if ( isset( $atts['location'] ) ) {
-		$output = geolocation_print_redirection( array(
+		$output = geolocation_template_redirection( array(
 			'url'         => $atts['url'],
 			'location_id' => $location_id,
 			'echo'        => false,
@@ -31,7 +31,7 @@ add_shortcode( 'geolocation_location_list', function( $atts ) {
 	);
 
 	$output = '<div class="geolocation-location-list">';
-	$output = geolocation_print_location_list( array(
+	$output = geolocation_template_location_list( array(
 		'home' => 'yes' === $atts['home'],
 		'echo' => false,
 	) );
@@ -48,7 +48,7 @@ add_shortcode( 'geolocation_location_link', function( $atts ) {
 	);
 
 	$output = '<div class="geolocation-location-link">';
-	$output = geolocation_print_location_link( array(
+	$output = geolocation_template_location_link( array(
 		'text' => $atts['text'],
 		'home' => 'yes' === $atts['home'],
 		'echo' => false,

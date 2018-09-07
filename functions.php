@@ -219,12 +219,12 @@ function geolocation_exclude_url( $url ) {
   * @param string $path The path to be checked.
   */
 function geolocation_extract_location_slug( $path ) {
-	$locations          = geolocation_get_locations( false );
+	$locations          = geolocation_get_locations();
 	$extracted_location = null;
 
 	if ( preg_match( '/^\/([^\/\?]+)/', $path, $matches ) ) {
 		foreach ( $locations as $location ) {
-			if ( $location === $matches[1] ) {
+			if ( $location->slug === $matches[1] ) {
 				$extracted_location = $location->slug;
 
 				break;
@@ -259,8 +259,8 @@ function geolocation_get_visitor_location_slug( $include_default_location = fals
 				$path = wp_parse_url( $url, PHP_URL_PATH );
 			}
 		}
-	} else {
-		$path = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+	} elseif ( isset( $_SERVER['GEOLOCATION_REQUEST_URI'] ) ) {
+		$path = sanitize_text_field( wp_unslash( $_SERVER['GEOLOCATION_REQUEST_URI'] ) );
 	}
 
 	if ( $path ) {
@@ -281,7 +281,7 @@ function geolocation_get_visitor_location_slug( $include_default_location = fals
  * @return string The modified URL.
  */
 function geolocation_add_location_to_url( $url ) {
-	$user_location = null;
+	$location_slug = null;
 
 	/**
 	 * We do the conversion only if it is a public URL and the visitor is
@@ -301,7 +301,7 @@ function geolocation_add_location_to_url( $url ) {
 						: '' ) .
 					( ! empty( $parsed_url['host'] ) ?
 						$parsed_url['host'] : '' ) : '' ) .
-				'/' . $location_slug .
+				( $location_slug ? '/' . $location_slug : '' ) .
 				( ! empty( $parsed_url['path'] ) ?
 					$parsed_url['path'] : '' ) .
 				( ! empty( $parsed_url['query'] ) ?
@@ -356,29 +356,44 @@ function geolocation_get_visitor_location_id( $include_default_location = false 
 	return $location_id;
 }
 
-function geolocation_dropdown( $selected_location_id, $multiple = false ) {
+function geolocation_dropdown( $args = null ) {
 	$args = wp_parse_args(
 		$args,
 		array(
 			'id'       => 'geolocation_location_id',
-			'name'     => 'geolocation_location_id' . ( $multiple ? '[]' : '' ),
+			'multiple' => false,
+			'name'     => 'geolocation_location_id',
 			'selected' => null,
 		)
 	);
 
-	if ( $multiple ) {
-		wp_category_checklist(
+	if ( $args['multiple'] ) {
+		$name_filter = function() use( $args ) {
+			return $args['name'];
+		};
+
+		add_filter( 'geolocation_walker_location_checklist_input_name', $name_filter );
+
+		wp_terms_checklist(
 			0,
-			0,
-			$selected_location_id
+			array(
+				'name'          => $args['name'],
+				'selected_cats' => $args['selected'],
+				'taxonomy'      => 'location',
+				'walker'        => new Geolocation_Walker_Location_Checklist(),
+			)
 		);
+
+		remove_filter( 'geolocation_walker_location_checklist_input_name', $name_filter );
 	} else {
 		wp_dropdown_categories( array(
-			'taxonomy' => 'location',
-			'id'       => $args['id'],
-			'name'     => $args['name'],
-			'orderby'  => 'name',
-			'selected' => $args['selected'],
+			'hide_empty'       => false,
+			'id'               => $args['id'],
+			'name'             => $args['name'],
+			'orderby'          => 'name',
+			'selected'         => $args['selected'],
+			'show_option_none' => __( 'Select a location...', 'geolocation' ),
+			'taxonomy'         => 'location',
 		) );
 	}
 }

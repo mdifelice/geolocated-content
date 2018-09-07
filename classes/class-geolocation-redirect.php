@@ -16,7 +16,7 @@ class Geolocation_Redirect extends WP_Widget {
 	public function widget( $args, $instance ) {
 		echo $args['before_widget'];
 
-		geolocation_print_redirection(
+		geolocation_template_redirection(
 			array(
 				'url'         => ! empty( $instance['url'] ) ? $instance['url'] : '',
 				'location_id' => ! empty( $instance['location_id'] ) ? $instance['location_id'] : '',

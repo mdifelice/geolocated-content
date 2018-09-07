@@ -6,14 +6,14 @@ function geolocation_redirection_location_form_fields( $term = null ) {
 	);
 	$values = array();
 
-	if ( null === $term ) {
-		$field_wrapper = '<div class="form-field">%s%s</div>';
-	} else {
+	if ( is_a( $term, 'WP_Term' ) ) {
 		$field_wrapper = '<tr class="form-field"><th scope="row">%s</th><td>%s</td></tr>';
 
-		foreach ( $values as $key => $value ) {
+		foreach ( $fields as $key => $caption ) {
 			$values[ $key ] = get_term_meta( $term->term_id, 'geolocation_redirection_' . $key, true );
 		}
+	} else {
+		$field_wrapper = '<div class="form-field">%s%s</div>';
 	}
 
 	wp_nonce_field( 'geolocation_redirection_location_update', 'geolocation_redirection_nonce' );
@@ -24,12 +24,13 @@ function geolocation_redirection_location_form_fields( $term = null ) {
 			sprintf(
 				'<label for="geolocation_redirection_%s">%s</label>',
 				esc_attr( $key ),
-				esc_html( $label )
+				esc_html( $caption )
 			),
 			sprintf(
-				'<input id="geolocation_redirection_%s" name="geolocation_redirection_%s" value="%s" type="number" />',
+				'<input id="geolocation_redirection_%s" name="geolocation_redirection_%s" value="%s" type="number" class="widefat" step="0.000001" />',
 				esc_attr( $key ),
-				esc_attr( $key )
+				esc_attr( $key ),
+				esc_attr( isset( $values[ $key ] ) ? $values[ $key ] : '' )
 			)
 		);
 	}
@@ -47,7 +48,7 @@ function geolocation_redirection_location_update( $term_id ) {
 		$key = 'geolocation_redirection_' . $field;
 
 		if ( isset( $_POST[ $key ] ) ) {
-			$value = geolocation_absfloat( $_POST[ $key ] );
+			$value = floatval( $_POST[ $key ] );
 		} else {
 			$value = null;
 		}
@@ -82,7 +83,7 @@ add_action(	'admin_init', function() {
 			);
 		},
 		'geolocation',
-		'geolocation_settings'
+		'geolocation'
 	);
 
 	add_settings_field(
@@ -90,7 +91,7 @@ add_action(	'admin_init', function() {
 		__( 'Tolerance radius', 'geolocation' ),
 		function() {
 			printf(
-				'<input type="number" name="geolocation_redirection_tolerance_radius" value="%s" />',
+				'<input type="number" name="geolocation_redirection_tolerance_radius" value="%s" class="widefat" />',
 				esc_attr( get_option( 'geolocation_redirection_tolerance_radius' ) )
 			);
 
@@ -100,7 +101,7 @@ add_action(	'admin_init', function() {
 			);
 		},
 		'geolocation',
-		'geolocation_settings'
+		'geolocation'
 	);
 
 	register_setting(
@@ -114,16 +115,22 @@ add_action(	'admin_init', function() {
 	register_setting(
 		'geolocation',
 		'geolocation_redirection_tolerance_radius',
-		'geolocation_absfloat'
+		function( $value ) {
+			if ( '' !== $value ) {
+				$value = geolocation_absfloat( $value );
+			}
+
+			return $value;
+		}
 	);
-} );
+}, 11 );
 
 add_action( 'geolocation_init', function( $location_slug ) {
 	$redirection_enabled = get_option( 'geolocation_redirection_enabled' );
 
 	if ( 'yes' === $redirection_enabled ) {
 		$tolerance_radius         = get_option( 'geolocation_redirection_tolerance_radius' );
-		$javascript_relative_path = 'assets/public/geolocation.min.js';
+		$javascript_relative_path = 'assets/public/js/geolocation.min.js';
 		$locations                = geolocation_get_locations();
 		$locations_cleaned        = array();
 
@@ -134,7 +141,7 @@ add_action( 'geolocation_init', function( $location_slug ) {
 			);
 		}
 
-		$javascript_settings      = apply_filters(
+		$javascript_settings = apply_filters(
 			'geolocation_javascript_settings',
 			array(
 				'service'               => 'https://public-api.wordpress.com/geo/',
@@ -143,7 +150,7 @@ add_action( 'geolocation_init', function( $location_slug ) {
 				'tolerance_radius'      => $tolerance_radius,
 				'cookie'                => array(
 					'default_value' => 'default',
-					'name'		    => 'geolocation_' . md5( serialize( $location_slugs ) ),
+					'name'		    => 'geolocation_' . md5( serialize( $locations_cleaned ) ),
 					'expires'       => date( 'D, d M Y H:i:s T', time() + DAY_IN_SECONDS )
 				)
 			)
@@ -160,7 +167,7 @@ add_action( 'geolocation_init', function( $location_slug ) {
 		if ( $location_slug ) {
 			wp_enqueue_script(
 				'geolocation',
-				plugins_url( $javascript_relative_path, __DIR__ ),
+				plugins_url( $javascript_relative_path, __FILE__ ),
 				array(),
 				false,
 				true
@@ -172,11 +179,13 @@ add_action( 'geolocation_init', function( $location_slug ) {
 				$javascript_settings
 			);
 		} else {
-			printf(
-				'<script>var geolocation_settings=%s;%s</script>',
-				wp_json_encode( $javascript_settings ),
-				file_get_contents( __DIR__ . $javascript_relative_path )
-			);
+			add_action( 'wp_head', function() use( $javascript_settings, $javascript_relative_path ) {
+				printf(
+					'<script>var geolocation=%s;%s</script>',
+					wp_json_encode( $javascript_settings ),
+					file_get_contents( __DIR__ . '/' . $javascript_relative_path )
+				);
+			} );
 		}
 	}
 } );

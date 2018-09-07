@@ -43,7 +43,7 @@
 	};
 
 	// Returns the distance in kilometers between two coordinates using the Haversine formula.
-	var getDistance = function( latitudeFrom, longitudeFrom, latitudeTo, longitudeFrom ) {
+	var getDistance = function( latitudeFrom, longitudeFrom, latitudeTo, longitudeTo ) {
 		var latitudeFromRadians  = degreesToRadians( latitudeFrom );
 		var longitudeFromRadians = degreesToRadians( longitudeFrom );
 		var latitudeToRadians    = degreesToRadians( latitudeTo );
@@ -115,13 +115,13 @@
 		if ( cookieName ) {
 			var locationSlug = parseKeyPairString( document.cookie, geolocation.cookie.name, ';' );
 
-			if ( ! locationSlug ) {
+			if ( locationSlug ) {
 				if ( ! geolocation.current_location_slug && isValidLocation( locationSlug ) ) {
 					redirect = '/' + locationSlug + window.location.pathname;
 				}
 			} else {
-				if ( window.XmlHttpRequest ) {
-					var xhr   = new XmlHttpRequest();
+				if ( window.XMLHttpRequest ) {
+					var xhr   = new XMLHttpRequest();
 					var async = ! ! geolocation.current_location_slug;
 
 					xhr.open( 'GET', geolocation.service, async );
@@ -141,7 +141,7 @@
 						locationSlug = getLocationSlug( xhr );
 
 						if ( locationSlug ) {
-							redirect = '/' + market + window.location.pathname;
+							redirect = '/' + locationSlug + window.location.pathname;
 						}
 					}
 				}

@@ -7,7 +7,7 @@
  * Author URI:  https://github.com/mdifelice
  * Text Domain: geolocated-content
  * Domain Path: /languages
- * Version:     1.0.0
+ * Version:     0.1.0
  * License:     GPL2
  *
  * Geolocation is free software: you can redistribute it and/or modify it under
@@ -24,15 +24,16 @@
  * @package Geolocation
  */
 
+require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/classes/class-geolocation-location-link-widget.php';
 require_once __DIR__ . '/classes/class-geolocation-location-list-widget.php';
 require_once __DIR__ . '/classes/class-geolocation-redirect.php';
-require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/classes/class-geolocation-walker-location-checklist.php';
 require_once __DIR__ . '/jetpack.php';
 require_once __DIR__ . '/redirection.php';
 require_once __DIR__ . '/settings.php';
 require_once __DIR__ . '/shortcodes.php';
-require_once __DIR__ . '/templates.php';
+require_once __DIR__ . '/template.php';
 require_once __DIR__ . '/user-restriction.php';
 require_once __DIR__ . '/widgets.php';
 
@@ -48,8 +49,8 @@ add_action(	'admin_menu', function() {
 	<h1><?php esc_html_e( 'Geolocation', 'geolocation' ); ?></h1>
 	<form method="post" action="options.php">
 			<?php
-			settings_fields( 'geolocation_settings' );
-			do_settings_sections( 'geolocation_settings' );
+			settings_fields( 'geolocation' );
+			do_settings_sections( 'geolocation' );
 			submit_button();
 			?>
 	</form>
@@ -61,7 +62,7 @@ add_action(	'admin_menu', function() {
 
 add_action(	'admin_init', function() {
 	add_settings_section(
-		'geolocation_settings',
+		'geolocation',
 		__( 'Settings', 'geolocation' ),
 		null,
 		'geolocation'
@@ -71,23 +72,38 @@ add_action(	'admin_init', function() {
 		'geolocation_default_location_id', 
 		__( 'Default location', 'geolocation' ),
 		function() {
-			wp_dropdown_categories(
-				array(
-					'taxonomy'   => 'location',
-					'hide_empty' => false,
-					'name'       => 'geolocation_default_location_id',
-					'orderby'    => 'name',
-					'selected'   => get_option( 'geolocation_default_location_id' ),
-				)
-			);
+			$locations = geolocation_get_locations();
 
-			printf(
-				'<p class="description">%s</p>',
-				esc_html__( 'Allows to define a default location. If a post is not assigned to a particular location, it will be assigned to this location. When a visitor enters the website and they do not belong to a specific location, the visitor will see content only from the default location.', 'geolocation' )
-			);
+			if ( empty( $locations ) ) {
+				printf(
+					'<p class="description">' .
+					wp_kses(
+						__( 'There are no locations yet. Click <a href="%s">here</a> to add your first location.', 'geolocation' ),
+						array(
+							'a' => array(
+								'src' => true
+							)
+						)
+					) .
+					'</p>',
+					esc_attr( admin_url( 'edit-tags.php?taxonomy=location' ) )
+				);
+			} else {
+				geolocation_dropdown(
+					array(
+						'name'     => 'geolocation_default_location_id',
+						'selected' => get_option( 'geolocation_default_location_id' ),
+					)
+				);
+
+				printf(
+					'<p class="description">%s</p>',
+					esc_html__( 'Allows to define a default location. If a post is not assigned to a particular location, it will be assigned to this location. When a visitor enters the website and they do not belong to a specific location, the visitor will see content only from the default location.', 'geolocation' )
+				);
+			}
 		},
 		'geolocation',
-		'geolocation_settings'
+		'geolocation'
 	);
 
 	add_settings_field(
@@ -95,7 +111,7 @@ add_action(	'admin_init', function() {
 		__( 'Location slug', 'geolocation' ),
 		function() {
 			printf(
-				'<input type="text" name="geolocation_rewrite_slug" value="%s" />',
+				'<input type="text" class="widefat" name="geolocation_rewrite_slug" value="%s" />',
 				esc_attr( get_option( 'geolocation_rewrite_slug' ) )
 			);
 
@@ -110,14 +126,15 @@ add_action(	'admin_init', function() {
 			);
 		},
 		'geolocation',
-		'geolocation_settings'
+		'geolocation'
 	);
 
 	register_setting(
 		'geolocation',
 		'geolocation_default_location_id',
 		function( $value ) {
-			$locations = geolocation_get_locations();
+			$locations = geolocation_get_locations( true );
+			$value     = absint( $value );
 
 			if ( ! isset( $locations[ $value ] ) ) {
 				$value = false;
@@ -130,7 +147,15 @@ add_action(	'admin_init', function() {
 	register_setting(
 		'geolocation',
 		'geolocation_rewrite_slug',
-		'sanitize_file_name'
+		function( $value ) {
+			$value = sanitize_file_name( $value );
+
+			if ( $value !== get_option( 'geolocation_rewrite_slug' ) ) {
+				flush_rewrite_rules();
+			}
+
+			return $value;
+		}
 	);
 } );
 
@@ -176,7 +201,7 @@ add_action( 'save_post', function( $post_id, $post ) {
 
 		wp_set_post_terms( $post_id, $locations, 'location' );
 	}
-} );
+}, 10, 2 );
 
 /**
  * Shows location filter in administrator post lists.
@@ -231,6 +256,7 @@ add_action( 'init', function() {
 		'hierarchical'      => true,
 		'public'			=> true,
 		'show_admin_column'	=> true,
+		'show_in_rest'      => true,
 		'rewrite'			=> array(
 			'slug' => geolocation_get_rewrite_slug(),
 		),
@@ -263,9 +289,6 @@ add_action( 'init', function() {
 }, 999 );
 
 add_action( 'pre_get_posts', function( $query ) {
-	$post_type	= $query->get( 'post_type' );
-	$taxonomies	= get_object_taxonomies( $post_type );
-
 	/**
 	 * We don't want to execute this filter on XML-RPC nor WP_CLI requests.
 	 * We neither want to execute on the location archive page (only for
@@ -278,8 +301,16 @@ add_action( 'pre_get_posts', function( $query ) {
 		$skip = true;
 	} else if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		$skip = true;
-	} else if ( ! in_array( 'location', $taxonomies ) ) {
-		$skip = true;
+	} else {
+		$post_type = $query->get( 'post_type' );
+
+		if ( ! empty( $post_type ) ) {
+			$taxonomies	= get_object_taxonomies( $post_type );
+
+			if ( ! in_array( 'location', $taxonomies, true ) ) {
+				$skip = true;
+			}
+		}
 	}
 
 	if ( ! $skip ) {
@@ -371,7 +402,7 @@ add_action( 'pre_get_posts', function( $query ) {
  * link for that location.
  */
 add_filter( 'term_link', function( $url, $term, $taxonomy ) {
-	if ( 'location' === $taxonomy && apply_filters( 'geolocation_filter_term_link' ) ) {
+	if ( 'location' === $taxonomy && apply_filters( 'geolocation_filter_term_link', true ) ) {
 		remove_filter( 'home_url', 'geolocation_add_location_to_url' );
 
 		$url = get_home_url();
@@ -429,10 +460,11 @@ if ( ! geolocation_is_admin() ) {
 
 	/**
 	 * Add slash to avoid duplicated URLs. If we don't do this, we will have two
-	 * URLs for each request. We 301-redirects URLs with no trailing slashes.
+	 * URLs for each request.
 	 */
-	if( ! empty( $geolocation_request_uri ) && ! preg_match( '/(?:\/|\.php)$/', $geolocation_request_uri ) ) {
-		wp_safe_redirect( $geolocation_request_uri . '/', 301 );
+	if( ! empty( $geolocation_request_uri ) && ! preg_match( '/(?:(\/wp-json\/|(?:\/|\.php)$))/', $geolocation_request_uri ) ) {
+		header( 'HTTP/1.1 301 Moved permanently' );
+		header( 'Location: ' . $geolocation_request_uri . '/' );
 
 		exit;
 	}
@@ -445,11 +477,12 @@ if ( ! geolocation_is_admin() ) {
 	$geolocation_location_slug = geolocation_extract_location_slug( $geolocation_request_uri );
 
 	if ( $geolocation_location_slug ) {
-		$geolocation_modified_request_uri    = preg_replace( '/^\/' . preg_quote( $geolocation_location_slug ) . '/', '', $geolocation_location_slug, 1 );
+		$geolocation_modified_request_uri = preg_replace( '/^\/' . preg_quote( $geolocation_location_slug ) . '/', '', $geolocation_request_uri, 1 );
 
-		$_SERVER['REQUEST_URI'] = $geolocation_modified_request_uri;
+		$_SERVER['GEOLOCATION_REQUEST_URI'] = $_SERVER['REQUEST_URI'];
+		$_SERVER['REQUEST_URI']             = $geolocation_modified_request_uri;
 
-		do_action( 'geolocation_updated_request_uri', $geolocation_request_uri, $geolocation_updated_request_uri, $geolocation_location_slug );
+		do_action( 'geolocation_updated_request_uri', $geolocation_request_uri, $geolocation_modified_request_uri, $geolocation_location_slug );
 	}
 
 	do_action( 'geolocation_init', $geolocation_location_slug );

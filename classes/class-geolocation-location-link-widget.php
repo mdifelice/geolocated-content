@@ -16,7 +16,7 @@ class Geolocation_Location_Link_Widget extends WP_Widget {
 	public function widget( $args, $instance ) {
 		echo $args['before_widget'];
 
-		geolocation_print_location_link(
+		geolocation_template_location_link(
 			array(
 				'text' => ! empty( $instance['text'] ) ? $instance['text'] : '',
 				'home' => ! empty( $instance['home'] ),

@@ -17,7 +17,7 @@ class Geolocation_Location_List_Widget extends WP_Widget {
 		   echo $args['before_title'] . apply_filters( 'widget_title', $instance['title'] ) . $args['after_title'];
 		}
 
-		geolocation_print_location_list( array(
+		geolocation_template_location_list( array(
 			'home' => ! empty( $instance['home'] ),
 		) );
 

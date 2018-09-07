@@ -1,5 +1,5 @@
 <?php
-function geolocation_print_term_link( $args ) {
+function geolocation_template_term_link( $args ) {
 	$output = '';
 	$args   = wp_parse_args(
 		$args,
@@ -68,7 +68,7 @@ function geolocation_print_term_link( $args ) {
 	return $output;
 }
 
-function geolocation_print_location_list( $args ) {
+function geolocation_template_location_list( $args ) {
 	$output = '';
 	$args   = wp_parse_args(
 		$args,
@@ -86,7 +86,7 @@ function geolocation_print_location_list( $args ) {
 		foreach ( $locations as $location ) {
 			$output .= '<li>';
 
-			$output .= geolocation_print_location_link(
+			$output .= geolocation_template_location_link(
 				array(
 					'location_id' => $location->term_id,
 					'echo'        => false,
@@ -115,7 +115,7 @@ function geolocation_print_location_list( $args ) {
 	return $output;
 }
 
-function geolocation_print_redirection( $args ) {
+function geolocation_template_redirection( $args ) {
 	$output = '';
 	$args   = wp_parse_args(
 		$args,
