@@ -1,5 +1,18 @@
 <?php
-function geolocation_template_term_link( $args ) {
+/**
+ * Template functions.
+ *
+ * @package Geolocation
+ */
+
+/**
+ * Prints a link to a location.
+ *
+ * @param mixed $args Options.
+ *
+ * @return string The HTML text.
+ */
+function geolocation_template_location_link( $args ) {
 	$output = '';
 	$args   = wp_parse_args(
 		$args,
@@ -18,14 +31,14 @@ function geolocation_template_term_link( $args ) {
 	}
 
 	if ( $location_id ) {
-		if ( $args['home'] ) {
+		if ( ! $args['home'] ) {
 			add_filter( 'geolocation_filter_term_link', '__return_false' );
 		}
 
 		$link = get_term_link( $location_id, 'location' );
 		$text = '';
 
-		if ( $args['home'] ) {
+		if ( ! $args['home'] ) {
 			remove_filter( 'geolocation_filter_term_link', '__return_false' );
 		}
 
@@ -59,7 +72,7 @@ function geolocation_template_term_link( $args ) {
 			$output,
 			array(
 				'a' => array(
-					'src' => true,
+					'href' => true,
 				),
 			)
 		);
@@ -68,6 +81,13 @@ function geolocation_template_term_link( $args ) {
 	return $output;
 }
 
+/**
+ * Prints a list of location links.
+ *
+ * @param mixed $args Options.
+ *
+ * @return string The HTML text.
+ */
 function geolocation_template_location_list( $args ) {
 	$output = '';
 	$args   = wp_parse_args(
@@ -89,6 +109,7 @@ function geolocation_template_location_list( $args ) {
 			$output .= geolocation_template_location_link(
 				array(
 					'location_id' => $location->term_id,
+					'home'        => $args['home'],
 					'echo'        => false,
 				)
 			);
@@ -105,8 +126,8 @@ function geolocation_template_location_list( $args ) {
 			array(
 				'ul' => array(),
 				'li' => array(),
-				'a' => array(
-					'src' => true,
+				'a'  => array(
+					'href' => true,
 				),
 			)
 		);
@@ -115,6 +136,13 @@ function geolocation_template_location_list( $args ) {
 	return $output;
 }
 
+/**
+ * Redirects to another URL if the location is not the specified.
+ *
+ * @param mixed $args Options.
+ *
+ * @return string The HTML text.
+ */
 function geolocation_template_redirection( $args ) {
 	$output = '';
 	$args   = wp_parse_args(

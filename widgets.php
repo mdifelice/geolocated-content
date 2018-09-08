@@ -20,7 +20,7 @@ add_action( 'widgets_init', function() {
 add_action( 'in_widget_form', function( $widget, $return, $instance ) {
 	$locations = geolocation_get_locations();
 
-	if( isset( $instance['geolocation_location_ids'] ) ) {
+	if ( isset( $instance['geolocation_location_ids'] ) ) {
 		$instance_location_ids = $instance['geolocation_location_ids'];
 	} else {
 		$instance_location_ids = null;
@@ -29,6 +29,8 @@ add_action( 'in_widget_form', function( $widget, $return, $instance ) {
 	if ( ! empty( $instance_location_ids ) ) {
 		$instance_location_ids_map = array_flip( $instance_location_ids );
 	}
+
+	wp_nonce_field( 'geolocation_widget_update', 'geolocation_widget_nonce' );
 	?>
 <p>
 	<label><?php esc_html_e( 'Show in location?:', 'geolocation' ); ?></label>
@@ -41,27 +43,33 @@ add_action( 'in_widget_form', function( $widget, $return, $instance ) {
  * When a widget is updated we save the locations where we want to display it.
  */
 add_filter( 'widget_update_callback', function( $instance ) {
-	$location_ids = array();
+	if ( isset( $_POST['geolocation_widget_nonce'] ) ) {
+		$nonce = sanitize_text_field( wp_unslash( $_POST['geolocation_widget_nonce'] ) ); // WPCS: CSRF ok.
 
-	if ( isset( $_POST['geolocation_location_ids'] ) ) {
-		$possible_location_ids = $_POST['geolocation_location_ids'];
+		if ( wp_verify_nonce( $nonce, 'geolocation_widget_update' ) ) {
+			$location_ids = array();
 
-		if ( is_array( $possible_location_ids ) ) {
-			foreach ( $possible_location_ids as $possible_location_id ) {
-				$location_id = absint( $possible_location_id );
+			if ( isset( $_POST['geolocation_location_ids'] ) ) {
+				$possible_location_ids = $_POST['geolocation_location_ids']; // WPCS: sanitization ok.
 
-				if ( $location_id ) {
-					$location_ids[] = $location_id;
+				if ( is_array( $possible_location_ids ) ) {
+					foreach ( $possible_location_ids as $possible_location_id ) {
+						$location_id = absint( $possible_location_id );
+
+						if ( $location_id ) {
+							$location_ids[] = $location_id;
+						}
+					}
 				}
-			}	
-		}
-	}
+			}
 
-	if ( ! empty( $location_ids ) ) {
-		$instance['geolocation_location_ids'] = $location_ids;
-	} else {
-		if ( isset( $instance['geolocation_location_ids'] ) ) {
-			unset( $instance['geolocation_location_ids'] );
+			if ( ! empty( $location_ids ) ) {
+				$instance['geolocation_location_ids'] = $location_ids;
+			} else {
+				if ( isset( $instance['geolocation_location_ids'] ) ) {
+					unset( $instance['geolocation_location_ids'] );
+				}
+			}
 		}
 	}
 

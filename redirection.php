@@ -1,4 +1,17 @@
 <?php
+/**
+ * Redirection extension. Allows visitors to be redirected to their
+ * correspondant location using a geolocation webservice.
+ *
+ * @package Geolocation
+ */
+
+/**
+ * Prints location meta fields.
+ *
+ * @param WP_Term $term Optional. The term which is going to be edited or NULL
+ *                      in case of a nwe term.
+ */
 function geolocation_redirection_location_form_fields( $term = null ) {
 	$fields = array(
 		'latitude'  => __( 'Latitude', 'geolocation' ),
@@ -36,6 +49,11 @@ function geolocation_redirection_location_form_fields( $term = null ) {
 	}
 }
 
+/**
+ * Updates location metadata.
+ *
+ * @param int $term_id The location ID.
+ */
 function geolocation_redirection_location_update( $term_id ) {
 	check_admin_referer( 'geolocation_redirection_location_update', 'geolocation_redirection_nonce' );
 
@@ -67,9 +85,9 @@ add_action( 'location_edit_form_fields', 'geolocation_redirection_location_form_
 add_action( 'edit_location', 'geolocation_redirection_location_update' );
 add_action( 'create_location', 'geolocation_redirection_location_update' );
 
-add_action(	'admin_init', function() {
+add_action( 'admin_init', function() {
 	add_settings_field(
-		'geolocation_redirection_enabled', 
+		'geolocation_redirection_enabled',
 		__( 'Enable visitor redirection?', 'geolocation' ),
 		function() {
 			printf(
@@ -87,7 +105,7 @@ add_action(	'admin_init', function() {
 	);
 
 	add_settings_field(
-		'geolocation_redirection_tolerance_radius', 
+		'geolocation_redirection_tolerance_radius',
 		__( 'Tolerance radius', 'geolocation' ),
 		function() {
 			printf(
@@ -150,9 +168,9 @@ add_action( 'geolocation_init', function( $location_slug ) {
 				'tolerance_radius'      => $tolerance_radius,
 				'cookie'                => array(
 					'default_value' => 'default',
-					'name'		    => 'geolocation_' . md5( serialize( $locations_cleaned ) ),
-					'expires'       => date( 'D, d M Y H:i:s T', time() + DAY_IN_SECONDS )
-				)
+					'name'          => 'geolocation_' . md5( serialize( $locations_cleaned ) ),
+					'expires'       => date( 'D, d M Y H:i:s T', time() + DAY_IN_SECONDS ),
+				),
 			)
 		);
 
@@ -165,21 +183,23 @@ add_action( 'geolocation_init', function( $location_slug ) {
 		 * the location and redirect them there as soon as possible.
 		 */
 		if ( $location_slug ) {
-			wp_enqueue_script(
-				'geolocation',
-				plugins_url( $javascript_relative_path, __FILE__ ),
-				array(),
-				false,
-				true
-			);
+			add_action( 'wp_enqueue_scripts', function() use ( $javascript_relative_path, $javascript_settings ) {
+				wp_enqueue_script(
+					'geolocation',
+					plugins_url( $javascript_relative_path, __FILE__ ),
+					array(),
+					'1.0.0',
+					true
+				);
 
-			wp_localize_script(
-				'geolocation',
-				'geolocation',
-				$javascript_settings
-			);
+				wp_localize_script(
+					'geolocation',
+					'geolocation',
+					$javascript_settings
+				);
+			} );
 		} else {
-			add_action( 'wp_head', function() use( $javascript_settings, $javascript_relative_path ) {
+			add_action( 'wp_head', function() use ( $javascript_settings, $javascript_relative_path ) {
 				printf(
 					'<script>var geolocation=%s;%s</script>',
 					wp_json_encode( $javascript_settings ),

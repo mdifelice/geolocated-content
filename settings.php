@@ -24,12 +24,12 @@ function geolocation_settings_pre_option( $value, $name ) {
 }
 
 /**
- * Returns the meta key used to store an option for a specific location. 
+ * Returns the meta key used to store an option for a specific location.
  *
  * @param string $option_name The name of the option.
  *
  * @return string The meta key for that option.
- */ 
+ */
 function geolocation_settings_get_option_meta_key( $option_name ) {
 	return 'geolocation_' . $option_name;
 }
@@ -38,12 +38,13 @@ function geolocation_settings_get_option_meta_key( $option_name ) {
  * Returns the option value for an specific location.
  *
  * @param string $option_name The option name.
- * @param int	 $location_id The location ID.
+ * @param int    $location_id The location ID.
  *
  * @return mixed The option value. FALSE if it is not found.
  */
 function geolocation_settings_get_option( $option_name, $location_id ) {
 	$meta_key = geolocation_settings_get_option_meta_key( $option_name );
+	$value    = false;
 
 	if ( metadata_exists( 'term', $location_id, $meta_key ) ) {
 		$value = get_term_meta( $location_id, $meta_key, true );
@@ -53,10 +54,25 @@ function geolocation_settings_get_option( $option_name, $location_id ) {
 }
 
 /**
+ * Sets the option value for an specific location.
+ *
+ * @param string $option_name The option name.
+ * @param int    $location_id The location ID.
+ * @param mixed  $value       The option value.
+ *
+ * @return boolean Returns TRUE if the option could be set.
+ */
+function geolocation_settings_set_option( $option_name, $location_id, $value ) {
+	$meta_key = geolocation_settings_get_option_meta_key( $option_name );
+
+	return ! ! update_term_meta( $location_id, $meta_key, $value );
+}
+
+/**
  * Deletes the option value for a specific location.
  *
  * @param string $option_name The option name.
- * @param int	 $market_id   The market ID.
+ * @param int    $location_id The location ID.
  *
  * @return boolean TRUE on success, FALSE otherwise.
  */
@@ -71,9 +87,9 @@ function geolocation_settings_delete_option( $option_name, $location_id ) {
 	return $status;
 }
 
-add_action(	'admin_init', function() {
+add_action( 'admin_init', function() {
 	add_settings_field(
-		'geolocation_settings_enabled', 
+		'geolocation_settings_enabled',
 		__( 'Enable geolocated settings?', 'geolocation' ),
 		function() {
 			printf(
@@ -116,17 +132,18 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 			$locations = geolocation_get_locations();
 
 			if ( ! empty( $locations ) ) {
-				$current_location_id   = geolocation_get_current_location_id();
+				$current_location_id   = geolocation_get_current_user_location_id();
 				$default_location_name = __( 'Default', 'geolocation' );
 				$current_location_name = $default_location_name;
 
 				if ( isset( $locations[ $current_location_id ] ) ) {
-					$current_location_name = $locations[ $current_location ]->name;
+					$current_location_name = $locations[ $current_location_id ]->name;
 				}
 
 				$node = array(
 					'id'     => 'geolocation_location',
 					'parent' => false,
+					// translators: location name.
 					'title'  => sprintf( __( 'Current location: %s', 'geolocation' ), $current_location_name ),
 				);
 
@@ -160,51 +177,26 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 
 		$geolocation_settings_cache = array();
 
-		$location_id = geolocation_get_current_user_location_id();
-
 		foreach ( $wp_registered_settings as $option_name => $args ) {
 			if ( 0 !== strpos( $option_name, 'geolocation_' ) ) {
 				$geolocation_settings_cache[ $option_name ] = true;
-
-				/**
-				 * We only allow this for 'manage_options'-capable users and if
-				 * they are working over a valid market rather than the default
-				 * one.
-				 */
-				if ( $location_id && current_user_can( 'manage_options' ) ) {
-					add_filter( 'pre_update_option_' . $option_name, function( $value, $old_value, $option ) use ( $location_id ) {
-						$current_value = geolocation_settings_get_option( $option, $location_id );
-
-						if ( $current_value !== $value ) {
-							update_term_meta( $location_id, 'market_' . $option, $value );
-						}
-
-						/**
-						 * Returning the old value we make sure the original
-						 * option is not updated.
-						 *
-						 * @link https://codex.wordpress.org/Plugin_API/Filter_Reference/pre_update_option_(option_name)
-						 */
-						return $old_value;
-					}, 10, 3 );
-				}
 			}
 		}
 
 		/**
 		 * We only save the geolocation settings if they were modified.
 		 */
-		if ( $geolocation_settings_cache !== get_option( 'geolocation_settings_cache' ) ) {
+		if ( get_option( 'geolocation_settings_cache' ) !== $geolocation_settings_cache ) {
 			update_option( 'geolocation_settings_cache', $geolocation_settings_cache );
 		}
 	}, 999 );
 
 	/**
 	 * Here we enqueue a script and a style files that allow us to identify
-	 * visually which options are being altered by market.
+	 * visually which options are being altered by location.
 	 */
 	add_action( 'admin_enqueue_scripts', function() {
-		if ( current_user_can( 'manage_options' ) ) {	
+		if ( current_user_can( 'manage_options' ) ) {
 			wp_enqueue_style(
 				'geolocation-settings',
 				plugins_url( 'assets/administrator/css/settings.css', __FILE__ )
@@ -233,6 +225,7 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 						'reload'         => __( 'Reload', 'geolocation' ),
 						'confirm_delete' => __( 'Are you sure to delete this value?', 'geolocation' ),
 						'modal_loading'  => __( 'Loading...', 'geolocation' ),
+						// translators: setting name.
 						'modal_title'    => __( 'Viewing values for setting "%s"...', 'geolocation' ),
 						'error_delete'   => __( 'Cannot delete setting, maybe it does not exist.', 'geolocation' ),
 						'error_unknown'  => __( 'Unknown error. Please, try again later.', 'geolocation' ),
@@ -244,11 +237,11 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 	} );
 
 	/**
-	 * Added dialog for visualization of other markets settings.
+	 * Added dialog for visualization of other location settings.
 	 */
 	add_action( 'admin_footer', function() {
 		if ( current_user_can( 'manage_options' ) ) {
-			echo '<div id="geolocation-settings-modal"></div>';
+			print( '<div id="geolocation-settings-modal"></div>' );
 		}
 	} );
 
@@ -286,7 +279,7 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 	} );
 
 	/**
-	 * AJAX handler for loading setting for all markets.
+	 * AJAX handler for loading setting for all locations.
 	 */
 	add_action( 'wp_ajax_geolocation_settings_load', function() {
 		if ( current_user_can( 'manage_options' ) ) {
@@ -319,7 +312,7 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 					$response[] = array(
 						'id'            => $location->term_id,
 						'name'          => $location->name,
-						'setting_value' => var_export( geolocation_settings_get_option( $setting, $market->term_id ), true ),
+						'setting_value' => var_export( geolocation_settings_get_option( $setting, $location->term_id ), true ),
 					);
 				}
 			}
@@ -335,8 +328,32 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 	$geolocation_settings_cache = get_option( 'geolocation_settings_cache' );
 
 	if ( $geolocation_settings_cache ) {
-		foreach ( $geolocation_settings_cache as $name => $value ) {
-			add_filter( 'pre_option_' . $name, 'geolocation_settings_pre_option', 10, 3 );
+		foreach ( $geolocation_settings_cache as $option_name => $option_value ) {
+			add_filter( 'pre_option_' . $option_name, 'geolocation_settings_pre_option', 10, 3 );
+
+			add_filter( 'pre_update_option_' . $option_name, function( $value, $old_value, $option_name ) {
+				if ( current_user_can( 'manage_options' ) ) {
+					$location_id = geolocation_get_current_user_location_id();
+
+					if ( $location_id ) {
+						$current_value = geolocation_settings_get_option( $option, $location_id );
+
+						if ( $current_value !== $value ) {
+							geolocation_settings_set_option( $option_name, $location_id, $value );
+						}
+
+						/**
+						 * Returning the old value we make sure the original
+						 * option is not updated.
+						 *
+						 * @link https://codex.wordpress.org/Plugin_API/Filter_Reference/pre_update_option_(option_name)
+						 */
+						$value = $old_value;
+					}
+				}
+
+				return $value;
+			}, 10, 3 );
 		}
 	}
 }

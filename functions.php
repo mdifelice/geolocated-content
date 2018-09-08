@@ -2,14 +2,14 @@
 /**
  * Helper functions.
  *
- * @param Geolocation
+ * @package Geolocation
  */
 
 /**
  * Returns the rewrite slug for location archive page.
  *
  * @return string The location archive page rewrite slug.
- */ 
+ */
 function geolocation_get_rewrite_slug() {
 	$rewrite_slug = get_option( 'geolocation_rewrite_slug' );
 
@@ -24,7 +24,7 @@ function geolocation_get_rewrite_slug() {
  * Returns the list of allowed location IDs for the current user.
  *
  * @return array List of allowed locations IDs.
- */ 
+ */
 function geolocation_get_current_user_allowed_location_ids() {
 	$allowed_location_ids = null;
 	$current_user_id      = get_current_user_id();
@@ -42,7 +42,7 @@ function geolocation_get_current_user_allowed_location_ids() {
  * @param int $user_id The user ID.
  *
  * @return array List of allowed locations IDs.
- */ 
+ */
 function geolocation_get_user_allowed_location_ids( $user_id ) {
 	return get_user_meta( $user_id, 'geolocation_allowed_location_ids', true );
 }
@@ -68,7 +68,7 @@ function geolocation_is_admin() {
 			if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
 				$referer = sanitize_text_field( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
 
-				if ( false !== strpos( $_SERVER['HTTP_REFERER'], '/wp-admin/' ) ) {
+				if ( false !== strpos( $referer, '/wp-admin/' ) ) {
 					$is_admin = true;
 				}
 			}
@@ -212,12 +212,12 @@ function geolocation_exclude_url( $url ) {
 }
 
 /**
-  * Extracts the location slug from a request path. It extracts the first string
-  * it finds before any slash, for example from '/some/url' it will extract the
-  * string 'some' and it will check if that extracted location is a valid one.
-  *
-  * @param string $path The path to be checked.
-  */
+ * Extracts the location slug from a request path. It extracts the first string
+ * it finds before any slash, for example from '/some/url' it will extract the
+ * string 'some' and it will check if that extracted location is a valid one.
+ *
+ * @param string $path The path to be checked.
+ */
 function geolocation_extract_location_slug( $path ) {
 	$locations          = geolocation_get_locations();
 	$extracted_location = null;
@@ -267,9 +267,6 @@ function geolocation_get_visitor_location_slug( $include_default_location = fals
 		$location_slug = geolocation_extract_location_slug( $path );
 	}
 
-	if ( empty( $location_slug ) ) {
-	}
-
 	return $location_slug;
 }
 
@@ -291,7 +288,7 @@ function geolocation_add_location_to_url( $url ) {
 		$location_slug = geolocation_get_visitor_location_slug();
 		$parsed_url    = wp_parse_url( $url );
 
-		$url = 	( ! empty( $parsed_url['host'] ) ?
+		$url = ( ! empty( $parsed_url['host'] ) ?
 					( ! empty( $parsed_url['scheme'] ) ?
 						$parsed_url['scheme'] . ':' : '' ) . '//' .
 					( ! empty( $parsed_url['username'] ) ?
@@ -305,22 +302,22 @@ function geolocation_add_location_to_url( $url ) {
 				( ! empty( $parsed_url['path'] ) ?
 					$parsed_url['path'] : '' ) .
 				( ! empty( $parsed_url['query'] ) ?
-				  	'?' . $parsed_url['query'] : '' ) .
+					'?' . $parsed_url['query'] : '' ) .
 				( ! empty( $parsed_url['fragment'] ) ?
-				  	'#' . $parsed_url['fragment'] : '' );
+					'#' . $parsed_url['fragment'] : '' );
 	}
 
 	/**
-	  * For a suggestion made by the WordPress VIP team, we must remove the
-	  * trailing slash from the URL if the URL is being filtered by the
-	  * 'home_url' filter.
-	  *
-	  * We also do not want to untrail the slash when the template_redirect
-	  * plugin is being fired because it will throw a notice in
-	  * wp-includes/canonical.php due to the missing "path". But we do that only
-	  * if there is not a specific location because it could led to redirection
-	  * loop.
-	  */
+	 * For a suggestion made by the WordPress VIP team, we must remove the
+	 * trailing slash from the URL if the URL is being filtered by the
+	 * 'home_url' filter.
+	 *
+	 * We also do not want to untrail the slash when the template_redirect
+	 * plugin is being fired because it will throw a notice in
+	 * wp-includes/canonical.php due to the missing "path". But we do that only
+	 * if there is not a specific location because it could led to redirection
+	 * loop.
+	 */
 	if ( 'home_url' !== current_filter() || ( ! $location_slug && doing_action( 'template_redirect' ) ) ) {
 		$url = trailingslashit( $url );
 	} else {
@@ -347,7 +344,7 @@ function geolocation_get_visitor_location_id( $include_default_location = false 
 
 	foreach ( $locations as $location ) {
 		if ( $location_slug === $location->slug ) {
-			$location_id = $market->term_id;
+			$location_id = $location->term_id;
 
 			break;
 		}
@@ -356,6 +353,11 @@ function geolocation_get_visitor_location_id( $include_default_location = false 
 	return $location_id;
 }
 
+/**
+ * Prints dropdown of locations.
+ *
+ * @param mixed $args Optional. Settings for the dropdown.
+ */
 function geolocation_dropdown( $args = null ) {
 	$args = wp_parse_args(
 		$args,
@@ -368,7 +370,7 @@ function geolocation_dropdown( $args = null ) {
 	);
 
 	if ( $args['multiple'] ) {
-		$name_filter = function() use( $args ) {
+		$name_filter = function() use ( $args ) {
 			return $args['name'];
 		};
 
@@ -386,28 +388,30 @@ function geolocation_dropdown( $args = null ) {
 
 		remove_filter( 'geolocation_walker_location_checklist_input_name', $name_filter );
 	} else {
-		wp_dropdown_categories( array(
-			'hide_empty'       => false,
-			'id'               => $args['id'],
-			'name'             => $args['name'],
-			'orderby'          => 'name',
-			'selected'         => $args['selected'],
-			'show_option_none' => __( 'Select a location...', 'geolocation' ),
-			'taxonomy'         => 'location',
-		) );
+		wp_dropdown_categories(
+			array(
+				'hide_empty'       => false,
+				'id'               => $args['id'],
+				'name'             => $args['name'],
+				'orderby'          => 'name',
+				'selected'         => $args['selected'],
+				'show_option_none' => __( 'Select a location...', 'geolocation' ),
+				'taxonomy'         => 'location',
+			)
+		);
 	}
 }
 
 /**
  * Returns the location the current user is navigating.
  *
- * @return int The location ID. 
+ * @return int The location ID.
  */
 function geolocation_get_current_user_location_id() {
 	$current_location_id = null;
 
 	if ( isset( $_GET['geolocation_location_id'] ) ) {
-		$current_location_id = absint( wp_unslash( $_GET['geolocation_location_id'] ) );
+		$current_location_id = absint( $_GET['geolocation_location_id'] ); // WPCS: CSRF ok.
 	} else {
 		if ( isset( $_SERVER['REQUEST_METHOD'] ) ) {
 			$request_method = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) );
@@ -418,8 +422,8 @@ function geolocation_get_current_user_location_id() {
 			 */
 			if ( 'POST' === $request_method ) {
 				if ( isset( $_SERVER['HTTP_REFERER'] ) ) {
-					$http_referer = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) );
-					$url = wp_parse_url( $http_referer );
+					$http_referer = sanitize_text_field( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
+					$url          = wp_parse_url( $http_referer );
 
 					if ( isset( $url['query'] ) ) {
 						wp_parse_str( $url['query'], $query );
@@ -441,18 +445,25 @@ function geolocation_get_current_user_location_id() {
  * is a public request or the one defined for the user, in case of an
  * administration request.
  *
- * @return int The location ID. 
+ * @return int The location ID.
  */
 function geolocation_get_current_location_id() {
 	if ( geolocation_is_admin() ) {
-		$location_id = geolocation_get_visitor_location_id();
-	} else {
 		$location_id = geolocation_get_current_user_location_id();
+	} else {
+		$location_id = geolocation_get_visitor_location_id();
 	}
 
 	return $location_id;
 }
 
+/**
+ * Sanitizes a positive float number.
+ *
+ * @param mixed $value Number to be sanitized.
+ *
+ * @return float The sanitized value.
+ */
 function geolocation_absfloat( $value ) {
 	return abs( floatval( $value ) );
 }

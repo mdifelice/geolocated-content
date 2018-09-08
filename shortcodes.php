@@ -6,10 +6,11 @@
  */
 
 add_shortcode( 'geolocation_redirect', function( $atts ) {
-	$output  = '';
-	$atts    = shortcode_atts( array(
-		'url'      => null,
-		'location' => null,
+	$output = '';
+	$atts   = shortcode_atts(
+		array(
+			'url'      => null,
+			'location' => null,
 		), $atts
 	);
 
@@ -25,13 +26,14 @@ add_shortcode( 'geolocation_redirect', function( $atts ) {
 } );
 
 add_shortcode( 'geolocation_location_list', function( $atts ) {
-	$atts    = shortcode_atts( array(
-		'home' => 'yes',
+	$atts = shortcode_atts(
+		array(
+			'home' => 'yes',
 		), $atts
 	);
 
-	$output = '<div class="geolocation-location-list">';
-	$output = geolocation_template_location_list( array(
+	$output  = '<div class="geolocation-location-list">';
+	$output .= geolocation_template_location_list( array(
 		'home' => 'yes' === $atts['home'],
 		'echo' => false,
 	) );
@@ -41,14 +43,15 @@ add_shortcode( 'geolocation_location_list', function( $atts ) {
 } );
 
 add_shortcode( 'geolocation_location_link', function( $atts ) {
-	$atts    = shortcode_atts( array(
-		'text' => null,
-		'home' => 'yes',
+	$atts = shortcode_atts(
+		array(
+			'text' => null,
+			'home' => 'yes',
 		), $atts
 	);
 
-	$output = '<div class="geolocation-location-link">';
-	$output = geolocation_template_location_link( array(
+	$output  = '<div class="geolocation-location-link">';
+	$output .= geolocation_template_location_link( array(
 		'text' => $atts['text'],
 		'home' => 'yes' === $atts['home'],
 		'echo' => false,

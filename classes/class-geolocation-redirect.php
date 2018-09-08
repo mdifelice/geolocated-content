@@ -9,12 +9,21 @@
  * Class definition.
  */
 class Geolocation_Redirect extends WP_Widget {
+	/**
+	 * Widget constructor.
+	 */
 	public function __construct() {
 		parent::__construct( false, __( 'Geolocation Location Redirect', 'geolocation' ) );
 	}
 
+	/**
+	 * Prints widget.
+	 *
+	 * @param array $args     Sidebar options.
+	 * @param array $instance Widget options.
+	 */
 	public function widget( $args, $instance ) {
-		echo $args['before_widget'];
+		echo $args['before_widget']; // WPCS: XSS ok.
 
 		geolocation_template_redirection(
 			array(
@@ -23,9 +32,17 @@ class Geolocation_Redirect extends WP_Widget {
 			)
 		);
 
-		echo $args['after_widget'];
+		echo $args['after_widget']; // WPCS: XSS ok.
 	}
 
+	/**
+	 * Updates the widget.
+	 *
+	 * @param array $new_instance New widget data.
+	 * @param array $old_instance Old widget data.
+	 *
+	 * @return array New widget data.
+	 */
 	public function update( $new_instance, $old_instance ) {
 		$new_instance['url']         = esc_url( $new_instance['url'] );
 		$new_instance['location_id'] = absint( $new_instance['location_id'] );
@@ -33,6 +50,11 @@ class Geolocation_Redirect extends WP_Widget {
 		return $new_instance;
 	}
 
+	/**
+	 * Prints widget form.
+	 *
+	 * @param array $instance Widget data.
+	 */
 	public function form( $instance ) {
 		$instance = wp_parse_args(
 			$instance,

@@ -1,17 +1,23 @@
+/**
+ * Geolocation JS handler.
+ *
+ * @package Geolocation
+ */
+
 ( function() {
- 	var areCookiesEnabled = function() {
+	var areCookiesEnabled = function() {
 		var cookiesEnabled = ( 'undefined' !== navigator.cookieEnabled && navigator.cookieEnabled ) ? true : null;
 
 		if ( ! cookiesEnabled ) {
-			document.cookie = '__wpcomgeo_testcookie=1';
+			document.cookie = 'geolocation_testcookie=1';
 
-			if ( -1 !== document.cookie.indexOf( '__wpcomgeo_testcookie=1' ) ) {
+			if ( -1 !== document.cookie.indexOf( 'geolocation_test_cookie=1' ) ) {
 				cookiesEnabled = true;
 			}
 
 			var expired_date = new Date( 1981, 7, 16 );
 
-			document.cookie = '__wpcomgeo_testcookie=1;expires=' + expired_date.toUTCString();
+			document.cookie = 'geolocation_test_cookie=1;expires=' + expired_date.toUTCString();
 		}
 
 		return cookiesEnabled;
@@ -22,7 +28,9 @@
 		var value  = '';
 
 		for ( var i = 0; i < tokens.length; i++ ) {
-			while ( tokens[ i ].charAt( 0 ) == ' ' ) tokens[ i ] = tokens[ i ].substring( 1 );
+			while ( tokens[ i ].charAt( 0 ) === ' ' ) {
+				tokens[ i ] = tokens[ i ].substring( 1 );
+			}
 
 			if ( tokens[ i ].indexOf( parameter + '=' ) == 0 ) {
 				value = tokens[ i ].substring( parameter.length + 1, tokens[ i ].length );
@@ -49,9 +57,9 @@
 		var latitudeToRadians    = degreesToRadians( latitudeTo );
 		var longitudeToRadians   = degreesToRadians( longitudeTo );
 		// Average earth radius in kilometers.
-		var earthRadius          = 6371;
+		var earthRadius = 6371;
 
-		return
+		return (
 			2 * earthRadius *
 			Math.asin(
 				Math.sqrt(
@@ -61,7 +69,8 @@
 					  Math.pow( Math.sin( ( longitudeToRadians - longitudeFromRadians ) / 2 ), 2 )
 					)
 				)
-			);
+			)
+		);
 	};
 
 	var getLocationSlug = function( xhr ) {
@@ -76,28 +85,32 @@
 				var maxDistance = geolocation.tolerance_radius ? geolocation.tolerance_radius : null;
 
 				for ( var slug in geolocation.locations ) {
-					var location = geolocation.locations[ slug ];
+					var location          = geolocation.locations[ slug ];
+					var locationLatitude  = parseFloat( location[0] );
+					var locationLongitude = parseFloat( location[1] );
 
-					var distance = getDistance( latitude, longitude, location.latitude, location.longitude );
+					if ( locationLatitude && locationLongitude ) {
+						var distance = getDistance( latitude, longitude, locationLatitude, locationLongitude );
 
-					if ( null === maxDistance || distance < maxDistance ) {
-						maxDistance = distance;
+						if ( null === maxDistance || distance < maxDistance ) {
+							maxDistance = distance;
 
-						locationSlug = slug;
+							locationSlug = slug;
+						}
 					}
 				}
 			}
 		}
 
 		if ( areCookiesEnabled() ) {
-			document.cookie = encodeURIComponent( cookieName ) + '=' + encodeURIComponent( locationSlug ) + '; expires=' + geolocation.cookie.expires + '; path=/';
+			document.cookie = encodeURIComponent( cookieName ) + '=' + encodeURIComponent( locationSlug ? locationSlug : 'default' ) + '; expires=' + geolocation.cookie.expires + '; path=/';
 		}
 
 		return locationSlug;
 	};
 
 	var overrideLocation = parseKeyPairString( window.location.search.substring( 1 ), 'override_location', '&' );
-	var redirect 		  = null;
+	var redirect 		 = null;
 
 	if ( overrideLocation && isValidLocation( overrideLocation ) ) {
 		if ( overrideLocation !== geolocation.current_location_slug ) {
@@ -128,8 +141,8 @@
 
 					if ( async ) {
 						xhr.onreadystatechange = function() {
-							if ( XmlHttpRequest.DONE === xhr.readyState ) {
-								// We do not redirect, since there is already a specific location the visitor is navigatin.
+							if ( XMLHttpRequest.DONE === xhr.readyState ) {
+								// We do not redirect, since there is already a specific location the visitor is navigating.
 								getLocationSlug( xhr );
 							}
 						};

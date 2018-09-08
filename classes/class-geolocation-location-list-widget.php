@@ -5,25 +5,42 @@
  * @package Geolocation
  */
 
+/**
+ * Class definition.
+ */
 class Geolocation_Location_List_Widget extends WP_Widget {
+	/**
+	 * Widget constructor.
+	 */
 	public function __construct() {
 		parent::__construct( false, __( 'Geolocation Location List', 'geolocation' ) );
 	}
 
+	/**
+	 * Prints widget.
+	 *
+	 * @param array $args     Sidebar options.
+	 * @param array $instance Widget options.
+	 */
 	public function widget( $args, $instance ) {
-		echo $args['before_widget'];
+		echo $args['before_widget']; // WPCS: XSS ok.
 
 		if ( ! empty( $instance['title'] ) ) {
-		   echo $args['before_title'] . apply_filters( 'widget_title', $instance['title'] ) . $args['after_title'];
+			echo $args['before_title'] . apply_filters( 'widget_title', $instance['title'] ) . $args['after_title']; // WPCS: XSS ok.
 		}
 
 		geolocation_template_location_list( array(
 			'home' => ! empty( $instance['home'] ),
 		) );
 
-		echo $args['after_widget'];
+		echo $args['after_widget']; // WPCS: XSS ok.
 	}
 
+	/**
+	 * Prints widget form.
+	 *
+	 * @param array $instance Widget data.
+	 */
 	public function form( $instance ) {
 		$instance = wp_parse_args(
 			$instance,

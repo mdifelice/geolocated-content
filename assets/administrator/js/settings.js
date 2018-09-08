@@ -1,6 +1,12 @@
+/**
+ * Settings JS handler.
+ *
+ * @package Geolocation
+ */
+
 jQuery( document ).ready( function() {
 	if ( window.geolocation_settings && window.geolocation_settings.setting_names ) {
-		var setting_names = geolocation_settings.settings_names;
+		var setting_names = geolocation_settings.setting_names;
 		var i18n          = geolocation_settings.i18n;
 		var nonces        = geolocation_settings.nonces;
 
@@ -14,7 +20,7 @@ jQuery( document ).ready( function() {
 		for ( var i in setting_names ) {
 			var setting_name = setting_names[ i ];
 			var input        = jQuery( '[name^=' + setting_name + ']' );
-			
+
 			if ( input.length ) {
 				var container = input.parent();
 
@@ -23,14 +29,14 @@ jQuery( document ).ready( function() {
 				jQuery( 'body' ).addClass( 'geolocation-settings-active' );
 
 				jQuery( container ).click( function( e ) {
-					if( e.ctrlKey || e.metaKey ) {
+					if ( e.ctrlKey || e.metaKey ) {
 						e.preventDefault();
 
 						var modal        = jQuery( '#geolocation-settings-modal' );
 						var setting_name = jQuery( this ).attr( 'name' ).replace( /\[.*$/, '' )
-						
+
 						modal.dialog( {
-							title: i18n.modal_title.replace( '%s', setting )
+							title: i18n.modal_title.replace( '%s', setting_name )
 						} );
 
 						modal.empty().text( i18n.modal_loading );
@@ -73,7 +79,7 @@ jQuery( document ).ready( function() {
 											var href = window.location.href;
 
 											var geolocationLocationRegularExpression = new RegExp( /([\?&])geolocation_location_id=\d*/ );
-											var replacement = 'geolocation_location_id=' + encodeURIComponent( location.id );
+											var replacement                          = 'geolocation_location_id=' + encodeURIComponent( location.id );
 
 											if ( href.match( geolocationLocationRegularExpression ) ) {
 												if ( location.id ) {
