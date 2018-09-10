@@ -1,12 +1,12 @@
-body.geolocation-settings-active #wp-admin-bar-geolocation_location {
+body.geolocated-content-settings-active #wp-admin-bar-geolocated_content_location {
 	display: block;
 }
 
-#wp-admin-bar-geolocation_location {
+#wp-admin-bar-geolocated_content_location {
 	display: none;
 }
 
-.geolocation-settings-overwritable:after {
+.geolocated-content-settings-overwritable:after {
 	margin-left: 10px;
 	float: right;
 	cursor: help;
@@ -14,23 +14,23 @@ body.geolocation-settings-active #wp-admin-bar-geolocation_location {
 	content: "\f319";
 }
 
-#geolocation-settings-modal table {
+#geolocated-content-settings-modal table {
 	border-collapse: collapse;
 }
 
-#geolocation-settings-modal table td {
+#geolocated-content-settings-modal table td {
 	border: 1px solid #ccc;
 }
 
-#geolocation-settings-modal table tr td:first-child {
+#geolocated-content-settings-modal table tr td:first-child {
 	font-weight: bold;
 }
 
-#geolocation-settings-modal table tr td:nth-of-type(2) {
+#geolocated-content-settings-modal table tr td:nth-of-type(2) {
 	font-family: monospace;
 	white-space: pre;
 }
 
-#geolocation-settings-modal table tr td:last-child {
+#geolocated-content-settings-modal table tr td:last-child {
 	text-align: center;
 }

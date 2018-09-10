@@ -2,7 +2,7 @@
 /**
  * Template functions.
  *
- * @package Geolocation
+ * @package Geolocated_Content
  */
 
 /**
@@ -12,7 +12,7 @@
  *
  * @return string The HTML text.
  */
-function geolocation_template_location_link( $args ) {
+function geolocated_content_template_location_link( $args ) {
 	$output = '';
 	$args   = wp_parse_args(
 		$args,
@@ -27,25 +27,25 @@ function geolocation_template_location_link( $args ) {
 	if ( $args['location_id'] ) {
 		$location_id = $args['location_id'];
 	} else {
-		$location_id = geolocation_get_visitor_location_id( true );
+		$location_id = geolocated_content_get_visitor_location_id( true );
 	}
 
 	if ( $location_id ) {
 		if ( ! $args['home'] ) {
-			add_filter( 'geolocation_filter_term_link', '__return_false' );
+			add_filter( 'geolocated_content_filter_term_link', '__return_false' );
 		}
 
 		$link = get_term_link( $location_id, 'location' );
 		$text = '';
 
 		if ( ! $args['home'] ) {
-			remove_filter( 'geolocation_filter_term_link', '__return_false' );
+			remove_filter( 'geolocated_content_filter_term_link', '__return_false' );
 		}
 
 		if ( null !== $args['text'] ) {
 			$text = $args['text'];
 		} else {
-			$location = geolocation_get_location( $location_id );
+			$location = geolocated_content_get_location( $location_id );
 
 			if ( $location ) {
 				$text = $location->name;
@@ -88,7 +88,7 @@ function geolocation_template_location_link( $args ) {
  *
  * @return string The HTML text.
  */
-function geolocation_template_location_list( $args ) {
+function geolocated_content_template_location_list( $args ) {
 	$output = '';
 	$args   = wp_parse_args(
 		$args,
@@ -98,7 +98,7 @@ function geolocation_template_location_list( $args ) {
 		)
 	);
 
-	$locations = geolocation_get_locations();
+	$locations = geolocated_content_get_locations();
 
 	if ( ! empty( $locations ) ) {
 		$output = '<ul>';
@@ -106,7 +106,7 @@ function geolocation_template_location_list( $args ) {
 		foreach ( $locations as $location ) {
 			$output .= '<li>';
 
-			$output .= geolocation_template_location_link(
+			$output .= geolocated_content_template_location_link(
 				array(
 					'location_id' => $location->term_id,
 					'home'        => $args['home'],
@@ -143,7 +143,7 @@ function geolocation_template_location_list( $args ) {
  *
  * @return string The HTML text.
  */
-function geolocation_template_redirection( $args ) {
+function geolocated_content_template_redirection( $args ) {
 	$output = '';
 	$args   = wp_parse_args(
 		$args,
@@ -156,7 +156,7 @@ function geolocation_template_redirection( $args ) {
 
 	if ( ! empty( $args['url'] ) ) {
 		$redirection_url = esc_url( $args['url'] );
-		$location_id     = geolocation_get_visitor_location_id();
+		$location_id     = geolocated_content_get_visitor_location_id();
 
 		if ( $location_id === $args['location_id'] ) {
 			$output = sprintf(

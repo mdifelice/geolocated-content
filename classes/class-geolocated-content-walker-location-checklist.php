@@ -2,13 +2,13 @@
 /**
  * Custom walker for printing location checklist.
  *
- * @package Geolocation
+ * @package Geolocated_Content
  */
 
 /**
  * Class definition.
  */
-class Geolocation_Walker_Location_Checklist extends Walker {
+class Geolocated_Content_Walker_Location_Checklist extends Walker {
 	/**
 	 * Start the element output.
 	 *
@@ -27,7 +27,7 @@ class Geolocation_Walker_Location_Checklist extends Walker {
 		$output .= sprintf(
 			'<p><label class="selectit"><input type="checkbox" value="%s" name="%s[]"%s /> %s</label></p>',
 			$category->term_id,
-			apply_filters( 'geolocation_walker_location_checklist_input_name', 'geolocation_location_id' ),
+			apply_filters( 'geolocated_content_walker_location_checklist_input_name', 'geolocated_content_location_id' ),
 			checked( in_array( $category->term_id, $args['selected_cats'], true ), true, false ),
 			esc_html( $category->name )
 		);

@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Geolocation
+ * Plugin Name: Geolocated Content
  * Description: Allows to deliver different content to visitors from different locations.
- * Plugin URI:  https://github.com/mdifelice/geolocation
+ * Plugin URI:  https://github.com/mdifelice/geolocated-content
  * Author:      Martin Di Felice
  * Author URI:  https://github.com/mdifelice
  * Text Domain: geolocated-content
@@ -10,25 +10,26 @@
  * Version:     0.1.0
  * License:     GPL2
  *
- * Geolocation is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 2 of the License, or any later version.
+ * Geolocated Content is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 2 of the License, or any later version.
  *
- * Geolocation is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * Geolocated Content is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * Geolocation. If not, see https://www.gnu.org/licenses/gpl-2.0.html.
+ * Geolocated Content. If not, see https://www.gnu.org/licenses/gpl-2.0.html.
  *
- * @package Geolocation
+ * @package Geolocated_Content
  */
 
 require_once __DIR__ . '/functions.php';
-require_once __DIR__ . '/classes/class-geolocation-location-link-widget.php';
-require_once __DIR__ . '/classes/class-geolocation-location-list-widget.php';
-require_once __DIR__ . '/classes/class-geolocation-redirect.php';
-require_once __DIR__ . '/classes/class-geolocation-walker-location-checklist.php';
+require_once __DIR__ . '/classes/class-geolocated-content-location-link-widget.php';
+require_once __DIR__ . '/classes/class-geolocated-content-location-list-widget.php';
+require_once __DIR__ . '/classes/class-geolocated-content-redirect.php';
+require_once __DIR__ . '/classes/class-geolocated-content-walker-location-checklist.php';
 require_once __DIR__ . '/jetpack.php';
 require_once __DIR__ . '/redirection.php';
 require_once __DIR__ . '/settings.php';
@@ -39,18 +40,18 @@ require_once __DIR__ . '/widgets.php';
 add_action(
 	'admin_menu', function() {
 		add_options_page(
-			__( 'Geolocation', 'geolocation' ),
-			__( 'Geolocation', 'geolocation' ),
+			__( 'Geolocated Content', 'geolocated-content' ),
+			__( 'Geolocated Content', 'geolocated-content' ),
 			'manage_options',
-			'geolocation',
+			'geolocated-content',
 			function() {
 			?>
 <div class="wrap">
-	<h1><?php esc_html_e( 'Geolocation', 'geolocation' ); ?></h1>
+	<h1><?php esc_html_e( 'Geolocated Content', 'geolocated-content' ); ?></h1>
 	<form method="post" action="options.php">
 			<?php
-			settings_fields( 'geolocation' );
-			do_settings_sections( 'geolocation' );
+			settings_fields( 'geolocated-content' );
+			do_settings_sections( 'geolocated-content' );
 			submit_button();
 			?>
 	</form>
@@ -64,24 +65,24 @@ add_action(
 add_action(
 	'admin_init', function() {
 		add_settings_section(
-			'geolocation',
-			__( 'Settings', 'geolocation' ),
+			'geolocated-content',
+			__( 'Settings', 'geolocated-content' ),
 			null,
-			'geolocation'
+			'geolocated-content'
 		);
 
 		add_settings_field(
-			'geolocation_default_location_id',
-			__( 'Default location', 'geolocation' ),
+			'geolocated_content_default_location_id',
+			__( 'Default location', 'geolocated-content' ),
 			function() {
-				$locations = geolocation_get_locations();
+				$locations = geolocated_content_get_locations();
 
 				if ( empty( $locations ) ) {
 					printf(
 						'<p class="description">' .
 						wp_kses(
 							// translators: locations admin page.
-							__( 'There are no locations yet. Click <a href="%s">here</a> to add your first location.', 'geolocation' ),
+							__( 'There are no locations yet. Click <a href="%s">here</a> to add your first location.', 'geolocated-content' ),
 							array(
 								'a' => array(
 									'href' => true,
@@ -92,30 +93,30 @@ add_action(
 						esc_attr( admin_url( 'edit-tags.php?taxonomy=location' ) )
 					);
 				} else {
-					geolocation_dropdown(
+					geolocated_content_dropdown(
 						array(
-							'name'     => 'geolocation_default_location_id',
-							'selected' => get_option( 'geolocation_default_location_id' ),
+							'name'     => 'geolocated_content_default_location_id',
+							'selected' => get_option( 'geolocated_content_default_location_id' ),
 						)
 					);
 
 					printf(
 						'<p class="description">%s</p>',
-						esc_html__( 'Allows to define a default location. If a post is not assigned to a particular location, it will be assigned to this location. When a visitor enters the website and they do not belong to a specific location, the visitor will see content only from the default location.', 'geolocation' )
+						esc_html__( 'Allows to define a default location. If a post is not assigned to a particular location, it will be assigned to this location. When a visitor enters the website and they do not belong to a specific location, the visitor will see content only from the default location.', 'geolocated-content' )
 					);
 				}
 			},
-			'geolocation',
-			'geolocation'
+			'geolocated-content',
+			'geolocated-content'
 		);
 
 		add_settings_field(
-			'geolocation_rewrite_slug',
-			__( 'Location slug', 'geolocation' ),
+			'geolocated_content_rewrite_slug',
+			__( 'Location slug', 'geolocated-content' ),
 			function() {
 				printf(
-					'<input type="text" class="widefat" name="geolocation_rewrite_slug" value="%s" />',
-					esc_attr( get_option( 'geolocation_rewrite_slug' ) )
+					'<input type="text" class="widefat" name="geolocated_content_rewrite_slug" value="%s" />',
+					esc_attr( get_option( 'geolocated_content_rewrite_slug' ) )
 				);
 
 				printf(
@@ -123,7 +124,7 @@ add_action(
 					wp_kses(
 						sprintf(
 							// translators: permalink admin page.
-							__( 'You may change the slug that will be used for location archive pages. By default it will be the string <code>location</code>. Note: remember to flush rewrite rules after changing this value, you can do it <a href="%s">here</a>.', 'geolocation' ),
+							__( 'You may change the slug that will be used for location archive pages. By default it will be the string <code>location</code>. Note: remember to flush rewrite rules after changing this value, you can do it <a href="%s">here</a>.', 'geolocated-content' ),
 							admin_url( 'options-permalink.php' )
 						),
 						array(
@@ -135,15 +136,15 @@ add_action(
 					)
 				);
 			},
-			'geolocation',
-			'geolocation'
+			'geolocated-content',
+			'geolocated-content'
 		);
 
 		register_setting(
-			'geolocation',
-			'geolocation_default_location_id',
+			'geolocated-content',
+			'geolocated_content_default_location_id',
 			function( $value ) {
-				$locations = geolocation_get_locations( true );
+				$locations = geolocated_content_get_locations( true );
 				$value     = absint( $value );
 
 				if ( ! isset( $locations[ $value ] ) ) {
@@ -155,8 +156,8 @@ add_action(
 		);
 
 		register_setting(
-			'geolocation',
-			'geolocation_rewrite_slug',
+			'geolocated-content',
+			'geolocated_content_rewrite_slug',
 			'sanitize_file_name'
 		);
 	}
@@ -170,7 +171,7 @@ add_action(
  */
 add_action(
 	'save_post', function( $post_id, $post ) {
-		$default_location_id = geolocation_get_default_location_id();
+		$default_location_id = geolocated_content_get_default_location_id();
 
 		$skip = false;
 
@@ -220,11 +221,11 @@ add_action(
 		if ( in_array( 'location', get_object_taxonomies( $typenow ), true ) ) {
 			$location_id = null;
 
-			if ( isset( $_GET['geolocation_location_id'] ) ) {
-				$location_id = absint( $_GET['geolocation_location_id'] ); // WPCS: CSRF ok.
+			if ( isset( $_GET['geolocated_content_location_id'] ) ) {
+				$location_id = absint( $_GET['geolocated_content_location_id'] ); // WPCS: CSRF ok.
 			}
 
-			geolocation_dropdown(
+			geolocated_content_dropdown(
 				array(
 					'selected' => $location_id,
 				)
@@ -237,30 +238,30 @@ add_action(
  * Cleans the location cache whenever a location is modified or when the default
  * location changes.
  */
-add_action( 'created_location', 'geolocation_clean_locations_cache' );
-add_action( 'edited_location', 'geolocation_clean_locations_cache' );
-add_action( 'deleted_location', 'geolocation_clean_locations_cache' );
-add_action( 'update_option_geolocation_default_location_id', 'geolocation_clean_locations_cache' );
+add_action( 'created_location', 'geolocated_content_clean_locations_cache' );
+add_action( 'edited_location', 'geolocated_content_clean_locations_cache' );
+add_action( 'deleted_location', 'geolocated_content_clean_locations_cache' );
+add_action( 'update_option_geolocated_content_default_location_id', 'geolocated_content_clean_locations_cache' );
 /**
  * It uses a low priority in order to associate the location taxonomy with all
  * the possible registered custom post types.
  */
 add_action(
 	'init', function() {
-		load_theme_textdomain( 'geolocation', __DIR__ . '/languages' );
+		load_theme_textdomain( 'geolocated-content', __DIR__ . '/languages' );
 
 		$labels = array(
-			'name'              => __( 'Locations', 'geolocation' ),
-			'singular_name'     => __( 'Location', 'geolocation' ),
-			'search_items'      => __( 'Search Locations', 'geolocation' ),
-			'all_items'         => __( 'All Locations', 'geolocation' ),
-			'parent_item'       => __( 'Parent Location', 'geolocation' ),
-			'parent_item_colon' => __( 'Parent Location:', 'geolocation' ),
-			'edit_item'         => __( 'Edit Location', 'geolocation' ),
-			'update_item'       => __( 'Update Location', 'geolocation' ),
-			'add_new_item'      => __( 'Add New Location', 'geolocation' ),
-			'new_item_name'     => __( 'New Location Name', 'geolocation' ),
-			'menu_name'         => __( 'Locations', 'geolocation' ),
+			'name'              => __( 'Locations', 'geolocated-content' ),
+			'singular_name'     => __( 'Location', 'geolocated-content' ),
+			'search_items'      => __( 'Search Locations', 'geolocated-content' ),
+			'all_items'         => __( 'All Locations', 'geolocated-content' ),
+			'parent_item'       => __( 'Parent Location', 'geolocated-content' ),
+			'parent_item_colon' => __( 'Parent Location:', 'geolocated-content' ),
+			'edit_item'         => __( 'Edit Location', 'geolocated-content' ),
+			'update_item'       => __( 'Update Location', 'geolocated-content' ),
+			'add_new_item'      => __( 'Add New Location', 'geolocated-content' ),
+			'new_item_name'     => __( 'New Location Name', 'geolocated-content' ),
+			'menu_name'         => __( 'Locations', 'geolocated-content' ),
 		);
 
 		$args = array(
@@ -270,7 +271,7 @@ add_action(
 			'show_admin_column' => true,
 			'show_in_rest'      => true,
 			'rewrite'           => array(
-				'slug' => geolocation_get_rewrite_slug(),
+				'slug' => geolocated_content_get_rewrite_slug(),
 			),
 			'capabilities'      => array(
 				'manage_terms' => 'manage_options',
@@ -295,7 +296,7 @@ add_action(
 
 		$post_types[] = 'post';
 
-		$post_types = apply_filters( 'geolocation_post_types', $post_types );
+		$post_types = apply_filters( 'geolocated_content_post_types', $post_types );
 
 		register_taxonomy( 'location', $post_types, $args );
 	}, 999
@@ -335,7 +336,7 @@ add_action(
 			 */
 				$query->set( 'post_type', 'post' );
 			} else {
-				$is_admin         = geolocation_is_admin();
+				$is_admin         = geolocated_content_is_admin();
 				$location_ids     = array();
 				$operator         = 'IN';
 				$locations_not_in = $query->get( 'location__not_in' );
@@ -364,8 +365,8 @@ add_action(
 					}
 				} else {
 					if ( ! $is_admin ) {
-						$location_slug       = geolocation_get_visitor_location_slug();
-						$default_location_id = geolocation_get_default_location_id();
+						$location_slug       = geolocated_content_get_visitor_location_slug();
+						$default_location_id = geolocated_content_get_default_location_id();
 
 						if ( $default_location_id ) {
 							$location_ids[] = $default_location_id;
@@ -385,7 +386,7 @@ add_action(
 			 * We apply a filter to $location_ids, in case some script want to
 			 * include (or exclude) other locations in the query.
 			 */
-				$location_ids = apply_filters( 'geolocation_pre_get_posts_locations', $location_ids, $query, $operator, $is_admin );
+				$location_ids = apply_filters( 'geolocated_content_pre_get_posts_locations', $location_ids, $query, $operator, $is_admin );
 
 				if ( ! empty( $location_ids ) ) {
 					/**
@@ -418,18 +419,18 @@ add_action(
  */
 add_filter(
 	'term_link', function( $url, $term, $taxonomy ) {
-		if ( 'location' === $taxonomy && apply_filters( 'geolocation_filter_term_link', true ) ) {
-			remove_filter( 'home_url', 'geolocation_add_location_to_url' );
+		if ( 'location' === $taxonomy && apply_filters( 'geolocated_content_filter_term_link', true ) ) {
+			remove_filter( 'home_url', 'geolocated_content_add_location_to_url' );
 
 			$url = get_home_url();
 
-			$default_location_id = geolocation_get_default_location_id();
+			$default_location_id = geolocated_content_get_default_location_id();
 
 			if ( ! $default_location_id || $default_location_id !== $term->term_id ) {
 				$url .= '/' . $term->slug;
 			}
 
-			add_filter( 'home_url', 'geolocation_add_location_to_url' );
+			add_filter( 'home_url', 'geolocated_content_add_location_to_url' );
 		}
 
 		return $url;
@@ -438,13 +439,13 @@ add_filter(
 
 add_filter(
 	'body_class', function( $classes ) {
-		$location_slug = geolocation_get_visitor_location_slug();
+		$location_slug = geolocated_content_get_visitor_location_slug();
 
 		if ( ! $location_slug ) {
 			$location_slug = 'default';
 		}
 
-		$classes[] = 'geolocation-' . sanitize_html_class( $location_slug );
+		$classes[] = 'geolocated-content-' . sanitize_html_class( $location_slug );
 
 		return $classes;
 	}
@@ -460,36 +461,36 @@ add_filter(
 	}
 );
 
-add_filter( 'home_url', 'geolocation_add_location_to_url' );
+add_filter( 'home_url', 'geolocated_content_add_location_to_url' );
 
 add_filter(
 	'plugin_action_links_' . plugin_basename( __FILE__ ), function( $links ) {
 		$links[] = sprintf(
 			'<a href="%s">%s</a>',
-			esc_attr( admin_url( 'options-general.php?page=geolocation' ) ),
-			esc_html__( 'Settings', 'geolocation' )
+			esc_attr( admin_url( 'options-general.php?page=geolocated-content' ) ),
+			esc_html__( 'Settings', 'geolocated-content' )
 		);
 
 		return $links;
 	}
 );
 
-if ( ! geolocation_is_admin() ) {
-	$geolocation_request_uri       = '';
-	$geolocation_request_uri_path  = '';
-	$geolocation_request_uri_query = '';
+if ( ! geolocated_content_is_admin() ) {
+	$geolocated_content_request_uri       = '';
+	$geolocated_content_request_uri_path  = '';
+	$geolocated_content_request_uri_query = '';
 
 	if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-		$geolocation_request_uri = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+		$geolocated_content_request_uri = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
 
-		$geolocation_parsed_request_uri = wp_parse_url( $geolocation_request_uri );
+		$geolocated_content_parsed_request_uri = wp_parse_url( $geolocated_content_request_uri );
 
-		if ( isset( $geolocation_parsed_request_uri['path'] ) ) {
-			$geolocation_request_uri_path = $geolocation_parsed_request_uri['path'];
+		if ( isset( $geolocated_content_parsed_request_uri['path'] ) ) {
+			$geolocated_content_request_uri_path = $geolocated_content_parsed_request_uri['path'];
 		}
 
-		if ( isset( $geolocation_parsed_request_uri['query'] ) ) {
-			$geolocation_request_uri_query = $geolocation_parsed_request_uri['query'];
+		if ( isset( $geolocated_content_parsed_request_uri['query'] ) ) {
+			$geolocated_content_request_uri_query = $geolocated_content_parsed_request_uri['query'];
 		}
 	}
 
@@ -497,9 +498,9 @@ if ( ! geolocation_is_admin() ) {
 	 * Add slash to avoid duplicated URLs. If we don't do this, we will have two
 	 * URLs for each request.
 	 */
-	if ( ! empty( $geolocation_request_uri_path ) && ! preg_match( '/(?:(\/wp-json\/|(?:\/|\.php)$))/', $geolocation_request_uri_path ) ) {
+	if ( ! empty( $geolocated_content_request_uri_path ) && ! preg_match( '/(?:(\/wp-json\/|(?:\/|\.php)$))/', $geolocated_content_request_uri_path ) ) {
 		header( 'HTTP/1.1 301 Moved permanently' );
-		header( 'Location: ' . $geolocation_request_uri_path . '/' . ( $geolocation_request_uri_query ? '?' . $geolocation_request_uri_query : '' ) );
+		header( 'Location: ' . $geolocated_content_request_uri_path . '/' . ( $geolocated_content_request_uri_query ? '?' . $geolocated_content_request_uri_query : '' ) );
 
 		exit;
 	}
@@ -509,16 +510,16 @@ if ( ! geolocation_is_admin() ) {
 	 * Right here, full-page cache plugins, like Batcache, are already executed,
 	 * so each request will have a different cache.
 	 */
-	$geolocation_location_slug = geolocation_extract_location_slug( $geolocation_request_uri );
+	$geolocated_content_location_slug = geolocated_content_extract_location_slug( $geolocated_content_request_uri );
 
-	if ( $geolocation_location_slug ) {
-		$geolocation_modified_request_uri = preg_replace( '/^\/' . preg_quote( $geolocation_location_slug, '/' ) . '/', '', $geolocation_request_uri, 1 );
+	if ( $geolocated_content_location_slug ) {
+		$geolocated_content_modified_request_uri = preg_replace( '/^\/' . preg_quote( $geolocated_content_location_slug, '/' ) . '/', '', $geolocated_content_request_uri, 1 );
 
 		$_SERVER['GEOLOCATION_REQUEST_URI'] = $_SERVER['REQUEST_URI']; // WPCS: sanitization ok.
-		$_SERVER['REQUEST_URI']             = $geolocation_modified_request_uri;
+		$_SERVER['REQUEST_URI']             = $geolocated_content_modified_request_uri;
 
-		do_action( 'geolocation_updated_request_uri', $geolocation_request_uri, $geolocation_modified_request_uri, $geolocation_location_slug );
+		do_action( 'geolocated_content_updated_request_uri', $geolocated_content_request_uri, $geolocated_content_modified_request_uri, $geolocated_content_location_slug );
 	}
 
-	do_action( 'geolocation_init', $geolocation_location_slug );
+	do_action( 'geolocated_content_init', $geolocated_content_location_slug );
 }

@@ -3,7 +3,7 @@
  * Redirection extension. Allows visitors to be redirected to their
  * correspondant location using a geolocation webservice.
  *
- * @package Geolocation
+ * @package Geolocated_Content
  */
 
 /**
@@ -12,10 +12,10 @@
  * @param WP_Term $term Optional. The term which is going to be edited or NULL
  *                      in case of a nwe term.
  */
-function geolocation_redirection_location_form_fields( $term = null ) {
+function geolocated_content_redirection_location_form_fields( $term = null ) {
 	$fields = array(
-		'latitude'  => __( 'Latitude', 'geolocation' ),
-		'longitude' => __( 'Longitude', 'geolocation' ),
+		'latitude'  => __( 'Latitude', 'geolocated-content' ),
+		'longitude' => __( 'Longitude', 'geolocated-content' ),
 	);
 	$values = array();
 
@@ -23,24 +23,24 @@ function geolocation_redirection_location_form_fields( $term = null ) {
 		$field_wrapper = '<tr class="form-field"><th scope="row">%s</th><td>%s</td></tr>';
 
 		foreach ( $fields as $key => $caption ) {
-			$values[ $key ] = get_term_meta( $term->term_id, 'geolocation_redirection_' . $key, true );
+			$values[ $key ] = get_term_meta( $term->term_id, 'geolocated_content_redirection_' . $key, true );
 		}
 	} else {
 		$field_wrapper = '<div class="form-field">%s%s</div>';
 	}
 
-	wp_nonce_field( 'geolocation_redirection_location_update', 'geolocation_redirection_nonce' );
+	wp_nonce_field( 'geolocated_content_redirection_location_update', 'geolocated_content_redirection_nonce' );
 
 	foreach ( $fields as $key => $caption ) {
 		printf(
 			$field_wrapper,
 			sprintf(
-				'<label for="geolocation_redirection_%s">%s</label>',
+				'<label for="geolocated_content_redirection_%s">%s</label>',
 				esc_attr( $key ),
 				esc_html( $caption )
 			),
 			sprintf(
-				'<input id="geolocation_redirection_%s" name="geolocation_redirection_%s" value="%s" type="number" class="widefat" step="0.000001" />',
+				'<input id="geolocated_content_redirection_%s" name="geolocated_content_redirection_%s" value="%s" type="number" class="widefat" step="0.000001" />',
 				esc_attr( $key ),
 				esc_attr( $key ),
 				esc_attr( isset( $values[ $key ] ) ? $values[ $key ] : '' )
@@ -54,8 +54,8 @@ function geolocation_redirection_location_form_fields( $term = null ) {
  *
  * @param int $term_id The location ID.
  */
-function geolocation_redirection_location_update( $term_id ) {
-	check_admin_referer( 'geolocation_redirection_location_update', 'geolocation_redirection_nonce' );
+function geolocated_content_redirection_location_update( $term_id ) {
+	check_admin_referer( 'geolocated_content_redirection_location_update', 'geolocated_content_redirection_nonce' );
 
 	$fields = array(
 		'latitude',
@@ -63,7 +63,7 @@ function geolocation_redirection_location_update( $term_id ) {
 	);
 
 	foreach ( $fields as $field ) {
-		$key = 'geolocation_redirection_' . $field;
+		$key = 'geolocated_content_redirection_' . $field;
 
 		if ( isset( $_POST[ $key ] ) ) {
 			$value = floatval( $_POST[ $key ] );
@@ -79,63 +79,63 @@ function geolocation_redirection_location_update( $term_id ) {
 	}
 }
 
-add_action( 'location_add_form_fields', 'geolocation_redirection_location_form_fields' );
-add_action( 'location_edit_form_fields', 'geolocation_redirection_location_form_fields' );
+add_action( 'location_add_form_fields', 'geolocated_content_redirection_location_form_fields' );
+add_action( 'location_edit_form_fields', 'geolocated_content_redirection_location_form_fields' );
 
-add_action( 'edit_location', 'geolocation_redirection_location_update' );
-add_action( 'create_location', 'geolocation_redirection_location_update' );
+add_action( 'edit_location', 'geolocated_content_redirection_location_update' );
+add_action( 'create_location', 'geolocated_content_redirection_location_update' );
 
 add_action( 'admin_init', function() {
 	add_settings_field(
-		'geolocation_redirection_enabled',
-		__( 'Enable visitor redirection?', 'geolocation' ),
+		'geolocated_content_redirection_enabled',
+		__( 'Enable visitor redirection?', 'geolocated-content' ),
 		function() {
 			printf(
-				'<input type="checkbox" name="geolocation_redirection_enabled" value="yes"%s />',
-				checked( 'yes', get_option( 'geolocation_redirection_enabled' ), false )
+				'<input type="checkbox" name="geolocated_content_redirection_enabled" value="yes"%s />',
+				checked( 'yes', get_option( 'geolocated_content_redirection_enabled' ), false )
 			);
 
 			printf(
 				'<p class="description">%s</p>',
-				esc_html__( 'If checked there will be an attempt to automatically redirect the visitor to their correspondant location.', 'geolocation' )
+				esc_html__( 'If checked there will be an attempt to automatically redirect the visitor to their correspondant location.', 'geolocated-content' )
 			);
 		},
-		'geolocation',
-		'geolocation'
+		'geolocated-content',
+		'geolocated-content'
 	);
 
 	add_settings_field(
-		'geolocation_redirection_tolerance_radius',
-		__( 'Tolerance radius', 'geolocation' ),
+		'geolocated_content_redirection_tolerance_radius',
+		__( 'Tolerance radius', 'geolocated-content' ),
 		function() {
 			printf(
-				'<input type="number" name="geolocation_redirection_tolerance_radius" value="%s" class="widefat" />',
-				esc_attr( get_option( 'geolocation_redirection_tolerance_radius' ) )
+				'<input type="number" name="geolocated_content_redirection_tolerance_radius" value="%s" class="widefat" />',
+				esc_attr( get_option( 'geolocated_content_redirection_tolerance_radius' ) )
 			);
 
 			printf(
 				'<p class="description">%s</p>',
-				esc_html__( 'If this value is provided, the visitor will be considered that belongs to a location if they inside the specified radius (in kilometers). If it is not provided, the visitor will be matched with the closest location, no matter how far it is.', 'geolocation' )
+				esc_html__( 'If this value is provided, the visitor will be considered that belongs to a location if they inside the specified radius (in kilometers). If it is not provided, the visitor will be matched with the closest location, no matter how far it is.', 'geolocated-content' )
 			);
 		},
-		'geolocation',
-		'geolocation'
+		'geolocated-content',
+		'geolocated-content'
 	);
 
 	register_setting(
-		'geolocation',
-		'geolocation_redirection_enabled',
+		'geolocated-content',
+		'geolocated_content_redirection_enabled',
 		function( $value ) {
 			return 'yes' === $value ? 'yes' : 'no';
 		}
 	);
 
 	register_setting(
-		'geolocation',
-		'geolocation_redirection_tolerance_radius',
+		'geolocated-content',
+		'geolocated_content_redirection_tolerance_radius',
 		function( $value ) {
 			if ( '' !== $value ) {
-				$value = geolocation_absfloat( $value );
+				$value = geolocated_content_absfloat( $value );
 			}
 
 			return $value;
@@ -143,13 +143,13 @@ add_action( 'admin_init', function() {
 	);
 }, 11 );
 
-add_action( 'geolocation_init', function( $location_slug ) {
-	$redirection_enabled = get_option( 'geolocation_redirection_enabled' );
+add_action( 'geolocated_content_init', function( $location_slug ) {
+	$redirection_enabled = get_option( 'geolocated_content_redirection_enabled' );
 
 	if ( 'yes' === $redirection_enabled ) {
-		$tolerance_radius         = get_option( 'geolocation_redirection_tolerance_radius' );
-		$javascript_relative_path = 'assets/public/js/geolocation.min.js';
-		$locations                = geolocation_get_locations();
+		$tolerance_radius         = get_option( 'geolocated_content_redirection_tolerance_radius' );
+		$javascript_relative_path = 'assets/public/js/geolocated-content.min.js';
+		$locations                = geolocated_content_get_locations();
 		$locations_cleaned        = array();
 
 		foreach ( $locations as $location ) {
@@ -160,7 +160,7 @@ add_action( 'geolocation_init', function( $location_slug ) {
 		}
 
 		$javascript_settings = apply_filters(
-			'geolocation_javascript_settings',
+			'geolocated_content_javascript_settings',
 			array(
 				'service'               => 'https://public-api.wordpress.com/geo/',
 				'current_location_slug' => $location_slug,
@@ -168,7 +168,7 @@ add_action( 'geolocation_init', function( $location_slug ) {
 				'tolerance_radius'      => $tolerance_radius,
 				'cookie'                => array(
 					'default_value' => 'default',
-					'name'          => 'geolocation_' . md5( serialize( $locations_cleaned ) ),
+					'name'          => 'geolocated_content_' . md5( serialize( $locations_cleaned ) ),
 					'expires'       => date( 'D, d M Y H:i:s T', time() + DAY_IN_SECONDS ),
 				),
 			)
@@ -185,7 +185,7 @@ add_action( 'geolocation_init', function( $location_slug ) {
 		if ( $location_slug ) {
 			add_action( 'wp_enqueue_scripts', function() use ( $javascript_relative_path, $javascript_settings ) {
 				wp_enqueue_script(
-					'geolocation',
+					'geolocated-content',
 					plugins_url( $javascript_relative_path, __FILE__ ),
 					array(),
 					'1.0.0',
@@ -193,15 +193,15 @@ add_action( 'geolocation_init', function( $location_slug ) {
 				);
 
 				wp_localize_script(
-					'geolocation',
-					'geolocation',
+					'geolocated-content',
+					'geolocated_content',
 					$javascript_settings
 				);
 			} );
 		} else {
 			add_action( 'wp_head', function() use ( $javascript_settings, $javascript_relative_path ) {
 				printf(
-					'<script>var geolocation=%s;%s</script>',
+					'<script>var geolocated_content=%s;%s</script>',
 					wp_json_encode( $javascript_settings ),
 					file_get_contents( __DIR__ . '/' . $javascript_relative_path )
 				);
@@ -210,10 +210,10 @@ add_action( 'geolocation_init', function( $location_slug ) {
 	}
 } );
 
-add_filter( 'geolocation_new_locations', function( $new_locations ) {
+add_filter( 'geolocated_content_new_locations', function( $new_locations ) {
 	foreach ( $new_locations as $id => &$new_location ) {
-		$new_location->latitude  = get_term_meta( $id, 'geolocation_redirection_latitude', true );
-		$new_location->longitude = get_term_meta( $id, 'geolocation_redirection_longitude', true );
+		$new_location->latitude  = get_term_meta( $id, 'geolocated_content_redirection_latitude', true );
+		$new_location->longitude = get_term_meta( $id, 'geolocated_content_redirection_longitude', true );
 	}
 
 	return $new_locations;

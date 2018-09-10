@@ -2,7 +2,7 @@
 /**
  * Settings extension.
  *
- * @package Geolocation
+ * @package Geolocated_Content
  */
 
 /**
@@ -13,11 +13,11 @@
  *
  * @return mixed The value of the option.
  */
-function geolocation_settings_pre_option( $value, $name ) {
-	$location_id = geolocation_get_current_location_id();
+function geolocated_content_settings_pre_option( $value, $name ) {
+	$location_id = geolocated_content_get_current_location_id();
 
 	if ( $location_id ) {
-		$value = apply_filters( 'geolocation_settings_pre_option_' . $name, geolocation_settings_get_option( $name, $location_id ), $location_id, $name );
+		$value = apply_filters( 'geolocated_content_settings_pre_option_' . $name, geolocated_content_settings_get_option( $name, $location_id ), $location_id, $name );
 	}
 
 	return $value;
@@ -30,8 +30,8 @@ function geolocation_settings_pre_option( $value, $name ) {
  *
  * @return string The meta key for that option.
  */
-function geolocation_settings_get_option_meta_key( $option_name ) {
-	return 'geolocation_' . $option_name;
+function geolocated_content_settings_get_option_meta_key( $option_name ) {
+	return 'geolocated_content_' . $option_name;
 }
 
 /**
@@ -42,8 +42,8 @@ function geolocation_settings_get_option_meta_key( $option_name ) {
  *
  * @return mixed The option value. FALSE if it is not found.
  */
-function geolocation_settings_get_option( $option_name, $location_id ) {
-	$meta_key = geolocation_settings_get_option_meta_key( $option_name );
+function geolocated_content_settings_get_option( $option_name, $location_id ) {
+	$meta_key = geolocated_content_settings_get_option_meta_key( $option_name );
 	$value    = false;
 
 	if ( metadata_exists( 'term', $location_id, $meta_key ) ) {
@@ -62,8 +62,8 @@ function geolocation_settings_get_option( $option_name, $location_id ) {
  *
  * @return boolean Returns TRUE if the option could be set.
  */
-function geolocation_settings_set_option( $option_name, $location_id, $value ) {
-	$meta_key = geolocation_settings_get_option_meta_key( $option_name );
+function geolocated_content_settings_set_option( $option_name, $location_id, $value ) {
+	$meta_key = geolocated_content_settings_get_option_meta_key( $option_name );
 
 	return ! ! update_term_meta( $location_id, $meta_key, $value );
 }
@@ -76,9 +76,9 @@ function geolocation_settings_set_option( $option_name, $location_id, $value ) {
  *
  * @return boolean TRUE on success, FALSE otherwise.
  */
-function geolocation_settings_delete_option( $option_name, $location_id ) {
+function geolocated_content_settings_delete_option( $option_name, $location_id ) {
 	$status   = false;
-	$meta_key = geolocation_settings_get_option_meta_key( $option_name );
+	$meta_key = geolocated_content_settings_get_option_meta_key( $option_name );
 
 	if ( metadata_exists( 'term', $location_id, $meta_key ) ) {
 		$status = delete_term_meta( $location_id, $meta_key );
@@ -89,26 +89,26 @@ function geolocation_settings_delete_option( $option_name, $location_id ) {
 
 add_action( 'admin_init', function() {
 	add_settings_field(
-		'geolocation_settings_enabled',
-		__( 'Enable geolocated settings?', 'geolocation' ),
+		'geolocated_content_settings_enabled',
+		__( 'Enable geolocated settings?', 'geolocated-content' ),
 		function() {
 			printf(
-				'<input type="checkbox" name="geolocation_settings_enabled" value="yes"%s />',
-				checked( 'yes', get_option( 'geolocation_settings_enabled' ), false )
+				'<input type="checkbox" name="geolocated_content_settings_enabled" value="yes"%s />',
+				checked( 'yes', get_option( 'geolocated_content_settings_enabled' ), false )
 			);
 
 			printf(
 				'<p class="description">%s</p>',
-				esc_html__( 'If you enable this, settings from other plugins can be modified to have different values for each location.', 'geolocation' )
+				esc_html__( 'If you enable this, settings from other plugins can be modified to have different values for each location.', 'geolocated-content' )
 			);
 		},
-		'geolocation',
-		'geolocation'
+		'geolocated_content',
+		'geolocated_content'
 	);
 
 	register_setting(
-		'geolocation',
-		'geolocation_settings_enabled',
+		'geolocated_content',
+		'geolocated_content_settings_enabled',
 		function( $value ) {
 			return 'yes' === $value ? 'yes' : 'no';
 		}
@@ -118,22 +118,22 @@ add_action( 'admin_init', function() {
 /**
  * In order to avoid searching for every option, only saved options through
  * this page will be filtered based on the location. To do that, we use an
- * special option called 'geolocation_settings_cache' which contains all the
- * options that were overriden.
+ * special option called 'geolocated_content_settings_cache' which contains all
+ * the options that were overriden.
  */
-$geolocation_settings_enabled = get_option( 'geolocation_settings_enabled' );
+$geolocated_content_settings_enabled = get_option( 'geolocated_content_settings_enabled' );
 
-if ( 'yes' === $geolocation_settings_enabled ) {
+if ( 'yes' === $geolocated_content_settings_enabled ) {
 	/**
 	 * Adds the location selector to the admin bar.
 	 */
 	add_action( 'admin_bar_menu', function( $wp_admin_bar ) {
 		if ( is_admin() && current_user_can( 'manage_options' ) ) {
-			$locations = geolocation_get_locations();
+			$locations = geolocated_content_get_locations();
 
 			if ( ! empty( $locations ) ) {
-				$current_location_id   = geolocation_get_current_user_location_id();
-				$default_location_name = __( 'Default', 'geolocation' );
+				$current_location_id   = geolocated_content_get_current_user_location_id();
+				$default_location_name = __( 'Default', 'geolocated-content' );
 				$current_location_name = $default_location_name;
 
 				if ( isset( $locations[ $current_location_id ] ) ) {
@@ -141,18 +141,18 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 				}
 
 				$node = array(
-					'id'     => 'geolocation_location',
+					'id'     => 'geolocated_content_location',
 					'parent' => false,
 					// translators: location name.
-					'title'  => sprintf( __( 'Current location: %s', 'geolocation' ), $current_location_name ),
+					'title'  => sprintf( __( 'Current location: %s', 'geolocated-content' ), $current_location_name ),
 				);
 
 				$wp_admin_bar->add_node( $node );
 
 				$node = array(
-					'href'   => remove_query_arg( 'geolocation_location_id' ),
-					'id'     => 'geolocation_location_default',
-					'parent' => 'geolocation_location',
+					'href'   => remove_query_arg( 'geolocated_content_location_id' ),
+					'id'     => 'geolocated_content_location_default',
+					'parent' => 'geolocated_content_location',
 					'title'  => $default_location_name,
 				);
 
@@ -160,9 +160,9 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 
 				foreach ( $locations as $location ) {
 					$node = array(
-						'href'   => add_query_arg( 'geolocation_location_id', $location->term_id ),
-						'id'     => 'geolocation_location_' . $location->term_id,
-						'parent' => 'geolocation_location',
+						'href'   => add_query_arg( 'geolocated_content_location_id', $location->term_id ),
+						'id'     => 'geolocated_content_location_' . $location->term_id,
+						'parent' => 'geolocated_content_location',
 						'title'  => $location->name,
 					);
 
@@ -175,19 +175,19 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 	add_action( 'admin_init', function() {
 		global $wp_registered_settings;
 
-		$geolocation_settings_cache = array();
+		$geolocated_content_settings_cache = array();
 
 		foreach ( $wp_registered_settings as $option_name => $args ) {
-			if ( 0 !== strpos( $option_name, 'geolocation_' ) ) {
-				$geolocation_settings_cache[ $option_name ] = true;
+			if ( 0 !== strpos( $option_name, 'geolocated_content_' ) ) {
+				$geolocated_content_settings_cache[ $option_name ] = true;
 			}
 		}
 
 		/**
-		 * We only save the geolocation settings if they were modified.
+		 * We only save the geolocated content settings if they were modified.
 		 */
-		if ( get_option( 'geolocation_settings_cache' ) !== $geolocation_settings_cache ) {
-			update_option( 'geolocation_settings_cache', $geolocation_settings_cache );
+		if ( get_option( 'geolocated_content_settings_cache' ) !== $geolocated_content_settings_cache ) {
+			update_option( 'geolocated_content_settings_cache', $geolocated_content_settings_cache );
 		}
 	}, 999 );
 
@@ -198,38 +198,38 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 	add_action( 'admin_enqueue_scripts', function() {
 		if ( current_user_can( 'manage_options' ) ) {
 			wp_enqueue_style(
-				'geolocation-settings',
+				'geolocated-content-settings',
 				plugins_url( 'assets/administrator/css/settings.css', __FILE__ )
 			);
 
 			wp_enqueue_style( 'wp-jquery-ui-dialog' );
 
 			wp_enqueue_script(
-				'geolocation-settings',
+				'geolocated-content-settings',
 				plugins_url( 'assets/administrator/js/settings.js', __FILE__ )
 			);
 
 			wp_enqueue_script( 'jquery-ui-dialog' );
 
 			wp_localize_script(
-				'geolocation-settings',
-				'geolocation_settings',
+				'geolocated-content-settings',
+				'geolocated_content_settings',
 				array(
-					'setting_names' => array_keys( get_option( 'geolocation_settings_cache' ) ),
+					'setting_names' => array_keys( get_option( 'geolocated_content_settings_cache' ) ),
 					'nonces'        => array(
-						'load'   => wp_create_nonce( 'geolocation_settings_load' ),
-						'delete' => wp_create_nonce( 'geolocation_settings_delete' ),
+						'load'   => wp_create_nonce( 'geolocated_content_settings_load' ),
+						'delete' => wp_create_nonce( 'geolocated_content_settings_delete' ),
 					),
 					'i18n'          => array(
-						'delete'         => __( 'Delete', 'geolocation' ),
-						'reload'         => __( 'Reload', 'geolocation' ),
-						'confirm_delete' => __( 'Are you sure to delete this value?', 'geolocation' ),
-						'modal_loading'  => __( 'Loading...', 'geolocation' ),
+						'delete'         => __( 'Delete', 'geolocated-content' ),
+						'reload'         => __( 'Reload', 'geolocated-content' ),
+						'confirm_delete' => __( 'Are you sure to delete this value?', 'geolocated-content' ),
+						'modal_loading'  => __( 'Loading...', 'geolocated-content' ),
 						// translators: setting name.
-						'modal_title'    => __( 'Viewing values for setting "%s"...', 'geolocation' ),
-						'error_delete'   => __( 'Cannot delete setting, maybe it does not exist.', 'geolocation' ),
-						'error_unknown'  => __( 'Unknown error. Please, try again later.', 'geolocation' ),
-						'error_setting'  => __( 'Unknown setting.', 'geolocation' ),
+						'modal_title'    => __( 'Viewing values for setting "%s"...', 'geolocated-content' ),
+						'error_delete'   => __( 'Cannot delete setting, maybe it does not exist.', 'geolocated-content' ),
+						'error_unknown'  => __( 'Unknown error. Please, try again later.', 'geolocated-content' ),
+						'error_setting'  => __( 'Unknown setting.', 'geolocated-content' ),
 					),
 				)
 			);
@@ -241,25 +241,25 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 	 */
 	add_action( 'admin_footer', function() {
 		if ( current_user_can( 'manage_options' ) ) {
-			print( '<div id="geolocation-settings-modal"></div>' );
+			print( '<div id="geolocated-content-settings-modal"></div>' );
 		}
 	} );
 
 	/**
 	 * AJAX handler for deleting setting.
 	 */
-	add_action( 'wp_ajax_geolocation_settings_delete', function() {
+	add_action( 'wp_ajax_geolocated_content_settings_delete', function() {
 		if ( current_user_can( 'manage_options' ) ) {
-			check_ajax_referer( 'geolocation_settings_delete' );
+			check_ajax_referer( 'geolocated_content_settings_delete' );
 
-			if ( isset( $_POST['geolocation_settings_setting_name'] ) ) {
-				$setting = sanitize_text_field( wp_unslash( $_POST['geolocation_settings_setting_name'] ) );
+			if ( isset( $_POST['geolocated_content_settings_setting_name'] ) ) {
+				$setting = sanitize_text_field( wp_unslash( $_POST['geolocated_content_settings_setting_name'] ) );
 			} else {
 				$setting = null;
 			}
 
-			if ( isset( $_POST['geolocation_settings_location_id'] ) ) {
-				$location_id = absint( wp_unslash( $_POST['geolocation_settings_location_id'] ) );
+			if ( isset( $_POST['geolocated_content_settings_location_id'] ) ) {
+				$location_id = absint( wp_unslash( $_POST['geolocated_content_settings_location_id'] ) );
 			} else {
 				$location_id = null;
 			}
@@ -268,7 +268,7 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 
 			if ( $setting && null !== $location_id ) {
 				if ( $location_id ) {
-					$response = geolocation_settings_delete_option( $setting, $location_id );
+					$response = geolocated_content_settings_delete_option( $setting, $location_id );
 				} else {
 					$response = delete_option( $location_id );
 				}
@@ -281,12 +281,12 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 	/**
 	 * AJAX handler for loading setting for all locations.
 	 */
-	add_action( 'wp_ajax_geolocation_settings_load', function() {
+	add_action( 'wp_ajax_geolocated_content_settings_load', function() {
 		if ( current_user_can( 'manage_options' ) ) {
-			check_ajax_referer( 'geolocation_settings_load' );
+			check_ajax_referer( 'geolocated_content_settings_load' );
 
-			if ( isset( $_POST['geolocation_settings_setting_name'] ) ) {
-				$setting = sanitize_text_field( wp_unslash( $_POST['geolocation_settings_setting_name'] ) );
+			if ( isset( $_POST['geolocated_content_settings_setting_name'] ) ) {
+				$setting = sanitize_text_field( wp_unslash( $_POST['geolocated_content_settings_setting_name'] ) );
 			} else {
 				$setting = null;
 			}
@@ -296,23 +296,23 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 			if ( $setting ) {
 				$response = array();
 
-				remove_filter( 'pre_option_' . $setting, 'geolocation_settings_pre_option', 10, 3 );
+				remove_filter( 'pre_option_' . $setting, 'geolocated_content_settings_pre_option', 10, 3 );
 
 				$response[] = array(
 					'id'            => 0,
-					'name'          => __( 'Default', 'geolocation' ),
+					'name'          => __( 'Default', 'geolocated-content' ),
 					'setting_value' => var_export( get_option( $setting ), true ),
 				);
 
-				add_filter( 'pre_option_' . $setting, 'geolocation_settings_pre_option', 10, 3 );
+				add_filter( 'pre_option_' . $setting, 'geolocated_content_settings_pre_option', 10, 3 );
 
-				$locations = geolocation_get_locations();
+				$locations = geolocated_content_get_locations();
 
 				foreach ( $locations as $location ) {
 					$response[] = array(
 						'id'            => $location->term_id,
 						'name'          => $location->name,
-						'setting_value' => var_export( geolocation_settings_get_option( $setting, $location->term_id ), true ),
+						'setting_value' => var_export( geolocated_content_settings_get_option( $setting, $location->term_id ), true ),
 					);
 				}
 			}
@@ -323,23 +323,23 @@ if ( 'yes' === $geolocation_settings_enabled ) {
 
 	/**
 	 * We add a filter for each option previously registered in
-	 * "geolocation_settings_cache".
+	 * "geolocated_content_settings_cache".
 	 */
-	$geolocation_settings_cache = get_option( 'geolocation_settings_cache' );
+	$geolocated_content_settings_cache = get_option( 'geolocated_content_settings_cache' );
 
-	if ( $geolocation_settings_cache ) {
-		foreach ( $geolocation_settings_cache as $option_name => $option_value ) {
-			add_filter( 'pre_option_' . $option_name, 'geolocation_settings_pre_option', 10, 3 );
+	if ( $geolocated_content_settings_cache ) {
+		foreach ( $geolocated_content_settings_cache as $option_name => $option_value ) {
+			add_filter( 'pre_option_' . $option_name, 'geolocated_content_settings_pre_option', 10, 3 );
 
 			add_filter( 'pre_update_option_' . $option_name, function( $value, $old_value, $option_name ) {
 				if ( current_user_can( 'manage_options' ) ) {
-					$location_id = geolocation_get_current_user_location_id();
+					$location_id = geolocated_content_get_current_user_location_id();
 
 					if ( $location_id ) {
-						$current_value = geolocation_settings_get_option( $option, $location_id );
+						$current_value = geolocated_content_settings_get_option( $option, $location_id );
 
 						if ( $current_value !== $value ) {
-							geolocation_settings_set_option( $option_name, $location_id, $value );
+							geolocated_content_settings_set_option( $option_name, $location_id, $value );
 						}
 
 						/**

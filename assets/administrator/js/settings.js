@@ -1,16 +1,16 @@
 /**
  * Settings JS handler.
  *
- * @package Geolocation
+ * @package Geolocated_Content
  */
 
 jQuery( document ).ready( function() {
-	if ( window.geolocation_settings && window.geolocation_settings.setting_names ) {
-		var setting_names = geolocation_settings.setting_names;
-		var i18n          = geolocation_settings.i18n;
-		var nonces        = geolocation_settings.nonces;
+	if ( window.geolocated_content_settings && window.geolocated_content_settings.setting_names ) {
+		var setting_names = geolocated_content_settings.setting_names;
+		var i18n          = geolocated_content_settings.i18n;
+		var nonces        = geolocated_content_settings.nonces;
 
-		jQuery( '#geolocation-settings-modal' ).dialog( {
+		jQuery( '#geolocated-content-settings-modal' ).dialog( {
 			autoOpen : false,
 			modal    : true,
 			width    : 800,
@@ -24,15 +24,15 @@ jQuery( document ).ready( function() {
 			if ( input.length ) {
 				var container = input.parent();
 
-				container.addClass( 'geolocation-settings-overwritable' );
+				container.addClass( 'geolocated-content-settings-overwritable' );
 
-				jQuery( 'body' ).addClass( 'geolocation-settings-active' );
+				jQuery( 'body' ).addClass( 'geolocated-content-settings-active' );
 
 				jQuery( container ).click( function( e ) {
 					if ( e.ctrlKey || e.metaKey ) {
 						e.preventDefault();
 
-						var modal        = jQuery( '#geolocation-settings-modal' );
+						var modal        = jQuery( '#geolocated-content-settings-modal' );
 						var setting_name = jQuery( this ).attr( 'name' ).replace( /\[.*$/, '' )
 
 						modal.dialog( {
@@ -47,9 +47,9 @@ jQuery( document ).ready( function() {
 							url     : ajaxurl,
 							method  : 'POST',
 							data    : {
-								action                            : 'geolocation_settings_load',
-								_ajax_nonce                       : nonces.load,
-								geolocation_settings_setting_name : setting_name
+								action                                   : 'geolocated_content_settings_load',
+								_ajax_nonce                              : nonces.load,
+								geolocated_content_settings_setting_name : setting_name
 							},
 							success : function( response ) {
 								modal.empty();
@@ -63,7 +63,7 @@ jQuery( document ).ready( function() {
 
 									for ( var i in response ) {
 										var location = response[ i ];
-										var matches  = window.location.search.match( /[\?&]geolocation_location_id=(\d+)/ );
+										var matches  = window.location.search.match( /[\?&]geolocated_content_location_id=(\d+)/ );
 										var currentLocationId;
 										var locationElement;
 
@@ -78,14 +78,14 @@ jQuery( document ).ready( function() {
 										} else {
 											var href = window.location.href;
 
-											var geolocationLocationRegularExpression = new RegExp( /([\?&])geolocation_location_id=\d*/ );
-											var replacement                          = 'geolocation_location_id=' + encodeURIComponent( location.id );
+											var geolocatedContentLocationRegularExpression = new RegExp( /([\?&])geolocated_content_location_id=\d*/ );
+											var replacement                          = 'geolocated_content_location_id=' + encodeURIComponent( location.id );
 
-											if ( href.match( geolocationLocationRegularExpression ) ) {
+											if ( href.match( geolocatedContentLocationRegularExpression ) ) {
 												if ( location.id ) {
-													href = href.replace( geolocationLocationRegularExpression, '$1' + replacement );
+													href = href.replace( geolocatedContentLocationRegularExpression, '$1' + replacement );
 												} else {
-													href = href.replace( geolocationLocationRegularExpression, '' );
+													href = href.replace( geolocatedContentLocationRegularExpression, '' );
 												}
 											} else {
 												if ( location.id ) {
@@ -105,7 +105,7 @@ jQuery( document ).ready( function() {
 													.append( locationElement )
 												)
 												.append( jQuery( '<td/>' )
-													.addClass( 'geolocation-settings-setting' )
+													.addClass( 'geolocated-content-settings-setting' )
 													.text( location.setting_value )
 												)
 												.append( jQuery( '<td/>' )
@@ -126,16 +126,16 @@ jQuery( document ).ready( function() {
 																		url      : ajaxurl,
 																		method   : 'POST',
 																		data     : {
-																			action                            : 'geolocation_settings_delete',
-																			_ajax_nonce                       : nonces.delete,
-																			geolocation_settings_setting_name : setting_name,
-																			geolocation_settings_location_id  : button.closest( 'tr' ).data( 'location-id' ),
+																			action                                   : 'geolocated_content_settings_delete',
+																			_ajax_nonce                              : nonces.delete,
+																			geolocated_content_settings_setting_name : setting_name,
+																			geolocated_content_settings_location_id  : button.closest( 'tr' ).data( 'location-id' ),
 																		},
 																		success  : function( response ) {
 																			if ( ! response ) {
 																				alert( i18n.error_delete );
 																			} else {
-																				button.closest( 'tr' ).find( '.geolocation-settings-setting' ).text( 'false' );
+																				button.closest( 'tr' ).find( '.geolocated-content-settings-setting' ).text( 'false' );
 
 																			}
 																		}.bind( button ),

@@ -1,7 +1,7 @@
 /**
- * Geolocation JS handler.
+ * Geolocated Content JS handler.
  *
- * @package Geolocation
+ * @package Geolocated_Content
  */
 
 ( function() {
@@ -9,15 +9,15 @@
 		var cookiesEnabled = ( 'undefined' !== navigator.cookieEnabled && navigator.cookieEnabled ) ? true : null;
 
 		if ( ! cookiesEnabled ) {
-			document.cookie = 'geolocation_testcookie=1';
+			document.cookie = 'geolocated_content_testcookie=1';
 
-			if ( -1 !== document.cookie.indexOf( 'geolocation_test_cookie=1' ) ) {
+			if ( -1 !== document.cookie.indexOf( 'geolocated_content_test_cookie=1' ) ) {
 				cookiesEnabled = true;
 			}
 
 			var expired_date = new Date( 1981, 7, 16 );
 
-			document.cookie = 'geolocation_test_cookie=1;expires=' + expired_date.toUTCString();
+			document.cookie = 'geolocated_content_test_cookie=1;expires=' + expired_date.toUTCString();
 		}
 
 		return cookiesEnabled;
@@ -43,7 +43,7 @@
 	};
 
 	var isValidLocation = function( locationSlug ) {
-		return 'undefined' !== typeof( geolocation.locations[ locationSlug ] );
+		return 'undefined' !== typeof( geolocated_content.locations[ locationSlug ] );
 	};
 
 	var degreesToRadians = function( degrees ) {
@@ -82,10 +82,10 @@
 			if ( response ) {
 				var latitude    = response.latitude;
 				var longitude   = response.longitude;
-				var maxDistance = geolocation.tolerance_radius ? geolocation.tolerance_radius : null;
+				var maxDistance = geolocated_content.tolerance_radius ? geolocated_content.tolerance_radius : null;
 
-				for ( var slug in geolocation.locations ) {
-					var location          = geolocation.locations[ slug ];
+				for ( var slug in geolocated_content.locations ) {
+					var location          = geolocated_content.locations[ slug ];
 					var locationLatitude  = parseFloat( location[0] );
 					var locationLongitude = parseFloat( location[1] );
 
@@ -103,7 +103,7 @@
 		}
 
 		if ( areCookiesEnabled() ) {
-			document.cookie = encodeURIComponent( cookieName ) + '=' + encodeURIComponent( locationSlug ? locationSlug : 'default' ) + '; expires=' + geolocation.cookie.expires + '; path=/';
+			document.cookie = encodeURIComponent( cookieName ) + '=' + encodeURIComponent( locationSlug ? locationSlug : 'default' ) + '; expires=' + geolocated_content.cookie.expires + '; path=/';
 		}
 
 		return locationSlug;
@@ -113,31 +113,31 @@
 	var redirect 		 = null;
 
 	if ( overrideLocation && isValidLocation( overrideLocation ) ) {
-		if ( overrideLocation !== geolocation.current_location_slug ) {
+		if ( overrideLocation !== geolocated_content.current_location_slug ) {
 			redirect = window.location.pathname.replace( /\?override_location=.+/, '' );
 
-			if ( geolocation.current_location_slug ) {
-				redirect = redirect.replace( '/' + geolocation.current_location_slug + '/', '/' );
+			if ( geolocated_content.current_location_slug ) {
+				redirect = redirect.replace( '/' + geolocated_content.current_location_slug + '/', '/' );
 			}
 
 			redirect = '/' + overrideLocation + redirect;
 		}
 	} else {
-		var cookieName = geolocation.cookie.name;
+		var cookieName = geolocated_content.cookie.name;
 
 		if ( cookieName ) {
-			var locationSlug = parseKeyPairString( document.cookie, geolocation.cookie.name, ';' );
+			var locationSlug = parseKeyPairString( document.cookie, geolocated_content.cookie.name, ';' );
 
 			if ( locationSlug ) {
-				if ( ! geolocation.current_location_slug && isValidLocation( locationSlug ) ) {
+				if ( ! geolocated_content.current_location_slug && isValidLocation( locationSlug ) ) {
 					redirect = '/' + locationSlug + window.location.pathname;
 				}
 			} else {
 				if ( window.XMLHttpRequest ) {
 					var xhr   = new XMLHttpRequest();
-					var async = ! ! geolocation.current_location_slug;
+					var async = ! ! geolocated_content.current_location_slug;
 
-					xhr.open( 'GET', geolocation.service, async );
+					xhr.open( 'GET', geolocated_content.service, async );
 
 					if ( async ) {
 						xhr.onreadystatechange = function() {

@@ -1,4 +1,4 @@
-=== Geolocation ===
+=== Geolocated Content ===
 Contributors: mdifelice
 Tags: geolocation
 Tested up to: 4.9.8

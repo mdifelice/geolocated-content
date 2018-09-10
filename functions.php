@@ -2,7 +2,7 @@
 /**
  * Helper functions.
  *
- * @package Geolocation
+ * @package Geolocated_Content
  */
 
 /**
@@ -10,11 +10,11 @@
  *
  * @return string The location archive page rewrite slug.
  */
-function geolocation_get_rewrite_slug() {
-	$rewrite_slug = get_option( 'geolocation_rewrite_slug' );
+function geolocated_content_get_rewrite_slug() {
+	$rewrite_slug = get_option( 'geolocated_content_rewrite_slug' );
 
 	if ( ! $rewrite_slug ) {
-		$rewrite_slug = __( 'location', 'geolocation' );
+		$rewrite_slug = __( 'location', 'geolocated-content' );
 	}
 
 	return $rewrite_slug;
@@ -25,12 +25,12 @@ function geolocation_get_rewrite_slug() {
  *
  * @return array List of allowed locations IDs.
  */
-function geolocation_get_current_user_allowed_location_ids() {
+function geolocated_content_get_current_user_allowed_location_ids() {
 	$allowed_location_ids = null;
 	$current_user_id      = get_current_user_id();
 
 	if ( $current_user_id ) {
-		$allowed_location_ids = geolocation_get_user_allowed_location_ids( $current_user_id );
+		$allowed_location_ids = geolocated_content_get_user_allowed_location_ids( $current_user_id );
 	}
 
 	return $allowed_location_ids;
@@ -43,8 +43,8 @@ function geolocation_get_current_user_allowed_location_ids() {
  *
  * @return array List of allowed locations IDs.
  */
-function geolocation_get_user_allowed_location_ids( $user_id ) {
-	return get_user_meta( $user_id, 'geolocation_allowed_location_ids', true );
+function geolocated_content_get_user_allowed_location_ids( $user_id ) {
+	return get_user_meta( $user_id, 'geolocated_content_allowed_location_ids', true );
 }
 
 /**
@@ -53,7 +53,7 @@ function geolocation_get_user_allowed_location_ids( $user_id ) {
  * @return boolean It returns TRUE if the visitor is navigating the
  *                 administrator.
  */
-function geolocation_is_admin() {
+function geolocated_content_is_admin() {
 	$is_admin = false;
 
 	if ( is_admin() ) {
@@ -87,11 +87,11 @@ function geolocation_is_admin() {
  *                                          default location. Default is FALSE.
  * @return array List of locations.
  */
-function geolocation_get_locations( $include_default_location = false ) {
-	$locations = get_option( 'geolocation_locations', array() );
+function geolocated_content_get_locations( $include_default_location = false ) {
+	$locations = get_option( 'geolocated_content_locations', array() );
 
 	if ( ! $include_default_location ) {
-		$default_location_id = geolocation_get_default_location_id();
+		$default_location_id = geolocated_content_get_default_location_id();
 
 		if ( $default_location_id && isset( $locations[ $default_location_id ] ) ) {
 			unset( $locations[ $default_location_id ] );
@@ -109,9 +109,9 @@ function geolocation_get_locations( $include_default_location = false ) {
  * @return WP_Term A term object representing the location or NULL if it does
  *                 not exist a location with such ID.
  */
-function geolocation_get_location( $location_id ) {
+function geolocated_content_get_location( $location_id ) {
 	$location  = null;
-	$locations = geolocation_get_locations();
+	$locations = geolocated_content_get_locations();
 
 	if ( isset( $locations[ $location_id ] ) ) {
 		$location = $locations[ $location_id ];
@@ -128,9 +128,9 @@ function geolocation_get_location( $location_id ) {
  * @return WP_Term A term object representing the location or NULL if it does
  *                 not exist a location with such slug.
  */
-function geolocation_get_location_by_slug( $location_slug ) {
+function geolocated_content_get_location_by_slug( $location_slug ) {
 	$location  = null;
-	$locations = geolocation_get_locations();
+	$locations = geolocated_content_get_locations();
 
 	foreach ( $locations as $possible_location ) {
 		if ( $location_slug === $possible_location->slug ) {
@@ -149,12 +149,12 @@ function geolocation_get_location_by_slug( $location_slug ) {
  * @return WP_Term The term representing the global market. NULL if it does not
  *                 exist.
  */
-function geolocation_get_default_location() {
-	$default_location_id = geolocation_get_default_location_id();
+function geolocated_content_get_default_location() {
+	$default_location_id = geolocated_content_get_default_location_id();
 	$default_location    = null;
 
 	if ( $default_location_id ) {
-		$default_location = geolocation_get_location( $default_location_id );
+		$default_location = geolocated_content_get_location( $default_location_id );
 	}
 
 	return $default_location;
@@ -165,15 +165,15 @@ function geolocation_get_default_location() {
  *
  * @return int The location ID or NULL if it is not set.
  */
-function geolocation_get_default_location_id() {
-	return get_option( 'geolocation_default_location_id', null );
+function geolocated_content_get_default_location_id() {
+	return get_option( 'geolocated_content_default_location_id', null );
 }
 
 /**
  * Updates the locations cache.
  */
-function geolocation_clean_locations_cache() {
-	$current_locations = geolocation_get_locations();
+function geolocated_content_clean_locations_cache() {
+	$current_locations = geolocated_content_get_locations();
 
 	$terms = get_terms(
 		'location',
@@ -187,10 +187,10 @@ function geolocation_clean_locations_cache() {
 		$terms
 	);
 
-	$new_locations = apply_filters( 'geolocation_new_locations', $new_locations );
+	$new_locations = apply_filters( 'geolocated_content_new_locations', $new_locations );
 
 	if ( $current_locations !== $new_locations ) {
-		update_option( 'geolocation_locations', $new_locations );
+		update_option( 'geolocated_content_locations', $new_locations );
 	}
 }
 
@@ -201,7 +201,7 @@ function geolocation_clean_locations_cache() {
  *
  * @return boolean TRUE if the URL must not be prefixed with the location.
  */
-function geolocation_exclude_url( $url ) {
+function geolocated_content_exclude_url( $url ) {
 	$path = wp_parse_url( $url, PHP_URL_PATH );
 
 	/**
@@ -218,8 +218,8 @@ function geolocation_exclude_url( $url ) {
  *
  * @param string $path The path to be checked.
  */
-function geolocation_extract_location_slug( $path ) {
-	$locations          = geolocation_get_locations();
+function geolocated_content_extract_location_slug( $path ) {
+	$locations          = geolocated_content_get_locations();
 	$extracted_location = null;
 
 	if ( preg_match( '/^\/([^\/\?]+)/', $path, $matches ) ) {
@@ -247,7 +247,7 @@ function geolocation_extract_location_slug( $path ) {
  *
  * @return string The location slug, NULL if it cannot be found.
  */
-function geolocation_get_visitor_location_slug( $include_default_location = false ) {
+function geolocated_content_get_visitor_location_slug( $include_default_location = false ) {
 	$location_slug = null;
 	$path          = null;
 
@@ -264,7 +264,7 @@ function geolocation_get_visitor_location_slug( $include_default_location = fals
 	}
 
 	if ( $path ) {
-		$location_slug = geolocation_extract_location_slug( $path );
+		$location_slug = geolocated_content_extract_location_slug( $path );
 	}
 
 	return $location_slug;
@@ -277,15 +277,15 @@ function geolocation_get_visitor_location_slug( $include_default_location = fals
  *
  * @return string The modified URL.
  */
-function geolocation_add_location_to_url( $url ) {
+function geolocated_content_add_location_to_url( $url ) {
 	$location_slug = null;
 
 	/**
 	 * We do the conversion only if it is a public URL and the visitor is
 	 * navigating a location which is not the default one.
 	 */
-	if ( ! geolocation_exclude_url( $url ) ) {
-		$location_slug = geolocation_get_visitor_location_slug();
+	if ( ! geolocated_content_exclude_url( $url ) ) {
+		$location_slug = geolocated_content_get_visitor_location_slug();
 		$parsed_url    = wp_parse_url( $url );
 
 		$url = ( ! empty( $parsed_url['host'] ) ?
@@ -337,10 +337,10 @@ function geolocation_add_location_to_url( $url ) {
  *
  * @return int The location ID. Or NULL if there is not a selected market.
  */
-function geolocation_get_visitor_location_id( $include_default_location = false ) {
+function geolocated_content_get_visitor_location_id( $include_default_location = false ) {
 	$location_id   = null;
-	$location_slug = geolocation_get_visitor_location_slug( $include_default_location );
-	$locations     = geolocation_get_locations( $include_default_location );
+	$location_slug = geolocated_content_get_visitor_location_slug( $include_default_location );
+	$locations     = geolocated_content_get_locations( $include_default_location );
 
 	foreach ( $locations as $location ) {
 		if ( $location_slug === $location->slug ) {
@@ -358,13 +358,13 @@ function geolocation_get_visitor_location_id( $include_default_location = false 
  *
  * @param mixed $args Optional. Settings for the dropdown.
  */
-function geolocation_dropdown( $args = null ) {
+function geolocated_content_dropdown( $args = null ) {
 	$args = wp_parse_args(
 		$args,
 		array(
-			'id'       => 'geolocation_location_id',
+			'id'       => 'geolocated_content_location_id',
 			'multiple' => false,
-			'name'     => 'geolocation_location_id',
+			'name'     => 'geolocated_content_location_id',
 			'selected' => null,
 		)
 	);
@@ -374,7 +374,7 @@ function geolocation_dropdown( $args = null ) {
 			return $args['name'];
 		};
 
-		add_filter( 'geolocation_walker_location_checklist_input_name', $name_filter );
+		add_filter( 'geolocated_content_walker_location_checklist_input_name', $name_filter );
 
 		wp_terms_checklist(
 			0,
@@ -382,11 +382,11 @@ function geolocation_dropdown( $args = null ) {
 				'name'          => $args['name'],
 				'selected_cats' => $args['selected'],
 				'taxonomy'      => 'location',
-				'walker'        => new Geolocation_Walker_Location_Checklist(),
+				'walker'        => new Geolocated_Content_Walker_Location_Checklist(),
 			)
 		);
 
-		remove_filter( 'geolocation_walker_location_checklist_input_name', $name_filter );
+		remove_filter( 'geolocated_content_walker_location_checklist_input_name', $name_filter );
 	} else {
 		wp_dropdown_categories(
 			array(
@@ -395,7 +395,7 @@ function geolocation_dropdown( $args = null ) {
 				'name'             => $args['name'],
 				'orderby'          => 'name',
 				'selected'         => $args['selected'],
-				'show_option_none' => __( 'Select a location...', 'geolocation' ),
+				'show_option_none' => __( 'Select a location...', 'geolocated-content' ),
 				'taxonomy'         => 'location',
 			)
 		);
@@ -407,11 +407,11 @@ function geolocation_dropdown( $args = null ) {
  *
  * @return int The location ID.
  */
-function geolocation_get_current_user_location_id() {
+function geolocated_content_get_current_user_location_id() {
 	$current_location_id = null;
 
-	if ( isset( $_GET['geolocation_location_id'] ) ) {
-		$current_location_id = absint( $_GET['geolocation_location_id'] ); // WPCS: CSRF ok.
+	if ( isset( $_GET['geolocated_content_location_id'] ) ) {
+		$current_location_id = absint( $_GET['geolocated_content_location_id'] ); // WPCS: CSRF ok.
 	} else {
 		if ( isset( $_SERVER['REQUEST_METHOD'] ) ) {
 			$request_method = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) );
@@ -428,8 +428,8 @@ function geolocation_get_current_user_location_id() {
 					if ( isset( $url['query'] ) ) {
 						wp_parse_str( $url['query'], $query );
 
-						if ( isset( $query['geolocation_location_id'] ) ) {
-							$current_location_id = $query['geolocation_location_id'];
+						if ( isset( $query['geolocated_content_location_id'] ) ) {
+							$current_location_id = $query['geolocated_content_location_id'];
 						}
 					}
 				}
@@ -447,11 +447,11 @@ function geolocation_get_current_user_location_id() {
  *
  * @return int The location ID.
  */
-function geolocation_get_current_location_id() {
-	if ( geolocation_is_admin() ) {
-		$location_id = geolocation_get_current_user_location_id();
+function geolocated_content_get_current_location_id() {
+	if ( geolocated_content_is_admin() ) {
+		$location_id = geolocated_content_get_current_user_location_id();
 	} else {
-		$location_id = geolocation_get_visitor_location_id();
+		$location_id = geolocated_content_get_visitor_location_id();
 	}
 
 	return $location_id;
@@ -464,6 +464,6 @@ function geolocation_get_current_location_id() {
  *
  * @return float The sanitized value.
  */
-function geolocation_absfloat( $value ) {
+function geolocated_content_absfloat( $value ) {
 	return abs( floatval( $value ) );
 }
