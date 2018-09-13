@@ -7,7 +7,7 @@
  * Author URI:  https://github.com/mdifelice
  * Text Domain: geolocated-content
  * Domain Path: /languages
- * Version:     0.1.0
+ * Version:     0.1.1
  * License:     GPL2
  *
  * Geolocated Content is free software: you can redistribute it and/or modify it
