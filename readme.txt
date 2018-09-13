@@ -1,5 +1,6 @@
 === Geolocated Content ===
 Contributors: mdifelice
+Stable tag: 0.1.0
 Tags: geolocation
 Tested up to: 4.9.8
 License: GPLv2 or later
