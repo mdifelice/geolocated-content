@@ -25,7 +25,7 @@ msgstr "Si se proporciona este valor, se considerará que el visitante pertenece
 
 # /settings.php:93
 msgid "Enable geolocated settings?"
-msgstr "¿Habilitar la configuración geolocalizada?"
+msgstr "¿Habilitar la geolocalización de opciones?"
 
 # /settings.php:102
 msgid "If you enable this, settings from other plugins can be modified to have different values for each location."
@@ -55,6 +55,9 @@ msgstr "¿Estás seguro de borrar este valor?"
 msgid "Loading..."
 msgstr "Cargando..."
 
+msgid "Viewing values for setting \"%s\"..."
+msgstr "Viendo valores para la opción \"%s\"..."
+
 # /settings.php:230
 msgid "Cannot delete setting, maybe it does not exist."
 msgstr "No se puede eliminar la configuración, tal vez no exista."
@@ -79,69 +82,73 @@ msgstr "ubicacion"
 msgid "Select a location..."
 msgstr "Selecciona una ubicación..."
 
-# /geolocated-content.php:42, /geolocated-content.php:43, /geolocated-content.php:49
+# /geolocated-content.php:43, /geolocated-content.php:44, /geolocated-content.php:50
 msgid "Geolocated Content"
 msgstr "Contenido Geolocalizado"
 
-# /geolocated-content.php:68, /geolocated-content.php:470
+# /geolocated-content.php:69, /geolocated-content.php:471
 msgid "Settings"
 msgstr "Configuraciones"
 
-# /geolocated-content.php:75
+# /geolocated-content.php:76
 msgid "Default location"
 msgstr "Ubicación predeterminada"
 
-# /geolocated-content.php:104
+# /geolocated-content.php:105
 msgid "Allows to define a default location. If a post is not assigned to a particular location, it will be assigned to this location. When a visitor enters the website and they do not belong to a specific location, the visitor will see content only from the default location."
 msgstr "Permite definir una ubicación predeterminada. Si una entrada no es asignada a una ubicación en particular, será asignada a esta ubicación. Cuando un visitante ingresa al sitio y no pertenece a ninguna ubicación específica, el visitante sólo podrá ver contenido de la ubicación predeterminada."
 
-# /geolocated-content.php:114
+# /geolocated-content.php:115
 msgid "Location slug"
 msgstr "Slug de ubicación"
 
-# /geolocated-content.php:253, /geolocated-content.php:263
+# /geolocated-content.php:127
+msgid "You may change the slug that will be used for location archive pages. By default it will be the string <code>location</code>. Note: remember to flush rewrite rules after changing this value, you can do it <a href=\"%s\">here</a>."
+msgstr "Puedes cambiar el slug que será utilizado para el archivo de ubicaciones. Por defecto será la cadena <code>ubicacion</code>. Nota: recuerda refrescar las reglas de reescritura luego de cambiar este valor, lo puedes hacer <a href=\"%s\">aquí</a>."
+
+# /geolocated-content.php:254, /geolocated-content.php:264
 msgid "Locations"
 msgstr "Ubicaciones"
 
-# /geolocated-content.php:254
+# /geolocated-content.php:255
 msgid "Location"
 msgstr "Ubicación"
 
-# /geolocated-content.php:255
+# /geolocated-content.php:256
 msgid "Search Locations"
 msgstr "Buscar ubicaciones"
 
-# /geolocated-content.php:256
+# /geolocated-content.php:257
 msgid "All Locations"
 msgstr "Todas las localizaciones"
 
-# /geolocated-content.php:257
+# /geolocated-content.php:258
 msgid "Parent Location"
 msgstr "Ubicación principal"
 
-# /geolocated-content.php:258
+# /geolocated-content.php:259
 msgid "Parent Location:"
 msgstr "Ubicación principal:"
 
-# /geolocated-content.php:259
+# /geolocated-content.php:260
 msgid "Edit Location"
 msgstr "Editar ubicación"
 
-# /geolocated-content.php:260
+# /geolocated-content.php:261
 msgid "Update Location"
 msgstr "Actualizar ubicación"
 
-# /geolocated-content.php:261
+# /geolocated-content.php:262
 msgid "Add New Location"
 msgstr "Agregar nueva ubicación"
 
-# /geolocated-content.php:262
+# /geolocated-content.php:263
 msgid "New Location Name"
 msgstr "Nuevo nombre de ubicación"
 
 # /classes/class-geolocated-content-location-link-widget.php:16
-msgid "Geolocated Content Location Link"
-msgstr "Contenido Geolocalizado Enlace de ubicación"
+msgid "Geolocated Content - Location Link"
+msgstr "Contenido geolocalizado - Enlace de ubicación"
 
 # /classes/class-geolocated-content-location-link-widget.php:53
 msgid "Text:"
@@ -152,16 +159,16 @@ msgid "Link to location home?:"
 msgstr "¿Enlace al inicio de la ubicación?:"
 
 # /classes/class-geolocated-content-location-list-widget.php:16
-msgid "Geolocated Content Location List"
-msgstr "Contenido Geolocalizado Lista de ubicaciones"
+msgid "Geolocated Content - Location List"
+msgstr "Contenido geolocalizado: lista de ubicaciones"
 
 # /classes/class-geolocated-content-location-list-widget.php:54
 msgid "Title:"
 msgstr "Título:"
 
 # /classes/class-geolocated-content-redirect.php:16
-msgid "Geolocated Content Location Redirect"
-msgstr "Contenido Geolocalizado Redireccionamiento de ubicación"
+msgid "Geolocated Content - Location Redirect"
+msgstr "Contenido geolocalizado: redirección de ubicación"
 
 # /classes/class-geolocated-content-redirect.php:68
 msgid "Redirection URL:"

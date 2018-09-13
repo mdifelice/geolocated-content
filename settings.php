@@ -102,12 +102,12 @@ add_action( 'admin_init', function() {
 				esc_html__( 'If you enable this, settings from other plugins can be modified to have different values for each location.', 'geolocated-content' )
 			);
 		},
-		'geolocated_content',
-		'geolocated_content'
+		'geolocated-content',
+		'geolocated-content'
 	);
 
 	register_setting(
-		'geolocated_content',
+		'geolocated-content',
 		'geolocated_content_settings_enabled',
 		function( $value ) {
 			return 'yes' === $value ? 'yes' : 'no';
